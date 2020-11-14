@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Copy control</title>
+        <style>
+</style>
+        
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item { list-style-type: none; } .task-list-item-checkbox { margin-left: -20px; vertical-align: middle; }
+</style>
+        
+        
+        
+    </head>
+    <body class="vscode-light">
+        <ul>
+<li><a href="#copy-control">Copy control</a>
+<ul>
+<li><a href="#copy-assign-and-destroy">Copy, assign and destroy</a>
+<ul>
+<li><a href="#the-copy-constructor">The copy constructor</a>
+<ul>
+<li><a href="#synthesized-copy-constructor">Synthesized copy constructor</a></li>
+<li><a href="#copy-initialization-vs-copy-initialization">Copy initialization vs copy initialization</a></li>
+<li><a href="#parameters-and-return-vales">Parameters and return vales</a></li>
+</ul>
+</li>
+<li><a href="#the-copy-assignment-operator">The copy-assignment operator</a>
+<ul>
+<li><a href="#introducing-overloaded-assignment">Introducing overloaded assignment</a></li>
+</ul>
+</li>
+<li><a href="#destructor">Destructor</a>
+<ul>
+<li><a href="#when-a-destructor-is-called">When a destructor is called</a></li>
+<li><a href="#synthesized-destructor">Synthesized destructor</a></li>
+</ul>
+</li>
+<li><a href="#the-rule-of-threefive">The rule of three/five</a></li>
+<li><a href="#using-default">Using <code>=default</code></a></li>
+<li><a href="#preventing-copies">Preventing copies</a>
+<ul>
+<li><a href="#define-a-function-as-deleted">Define a function as deleted</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#copy-control-and-resource-management">Copy control and resource management</a>
+<ul>
+<li><a href="#classes-that-act-like-values">Classes that act like values</a></li>
+<li><a href="#classes-that-act-like-pointers">Classes that act like pointers</a>
+<ul>
+<li><a href="#reference-counts">Reference counts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#swap">Swap</a>
+<ul>
+<li><a href="#using-swap-in-assignment-operator">Using <code>swap</code> in assignment operator</a></li>
+</ul>
+</li>
+<li><a href="#a-copy-control-example">A copy-control example</a></li>
+<li><a href="#classes-that-manage-dynamic-memory">Classes that manage dynamic memory</a>
+<ul>
+<li><a href="#example-strvec">Example: <code>StrVec</code></a></li>
+</ul>
+</li>
+<li><a href="#moving-objects">Moving objects</a>
+<ul>
+<li><a href="#rvalue-references">Rvalue references</a>
+<ul>
+<li><a href="#lvalues-persist-rvalues-are-ephemeral">Lvalues persist; Rvalues are ephemeral</a></li>
+<li><a href="#the-library-move-function">The library <code>move</code> function</a></li>
+</ul>
+</li>
+<li><a href="#move-constructor-and-move-assignment">Move constructor and move assignment</a>
+<ul>
+<li><a href="#move-operations-library-containers-and-exceptions">Move operations, library containers and exceptions</a></li>
+<li><a href="#move-assignment-operator">Move-assignment operator</a></li>
+<li><a href="#a-moved-from-object-must-be-destructible">A moved-from object must be destructible</a></li>
+<li><a href="#synthesized-move-operations">Synthesized move operations</a></li>
+</ul>
+</li>
+<li><a href="#rvalue-references-and-member-functions">Rvalue references and member functions</a>
+<ul>
+<li><a href="#reference-qualifier">Reference qualifier</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="copy-control">Copy control</h1>
+<p>When we define a class, we specify, implicitly or explicitly, what happens when objects of that class type are copied, assigned, moved and detroyed.  A class controls these operations by defining five special functions, <strong>copy construcotr</strong>, <strong>copy assignment</strong>, <strong>move constructor</strong>, <strong>move assignment</strong> and <strong>destructor</strong>. Collectively, these operations are called <strong>copy control</strong>.</p>
+<h2 id="copy-assign-and-destroy">Copy, assign and destroy</h2>
+<h3 id="the-copy-constructor">The copy constructor</h3>
+<p>A constructor is the copy contructor if its first parameter is a reference to the class type and any additional parameters have default values.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        Foo(); <span class="hljs-comment">// default constructor</span>
+        Foo(<span class="hljs-keyword">const</span> Foo &amp;); <span class="hljs-comment">// copy constructor</span>
+        <span class="hljs-comment">// it has to be a reference</span>
+}
+</div></code></pre>
+<h4 id="synthesized-copy-constructor">Synthesized copy constructor</h4>
+<p>When we define a class, a copy constructor is synthesized even if we define other constructors. But a default constructor will no be synthesized, unless requested, if we have defined other constructors.</p>
+<p>Synthesized copy constructors make memberwise copy of the members in the class. Primitive types and arrays are copied; objects of user-defined classes are copied using the copy constructors of their class.</p>
+<h4 id="copy-initialization-vs-copy-initialization">Copy initialization vs copy initialization</h4>
+<pre><code class="language-c++"><div><span class="hljs-function"><span class="hljs-built_in">string</span> <span class="hljs-title">dots</span><span class="hljs-params">(<span class="hljs-number">10</span>,<span class="hljs-string">'0'</span>)</span></span>;         <span class="hljs-comment">// direct initialization</span>
+<span class="hljs-function"><span class="hljs-built_in">string</span> <span class="hljs-title">s</span><span class="hljs-params">(dots)</span></span>;              <span class="hljs-comment">// direct initialization</span>
+<span class="hljs-built_in">string</span> s2 = dots;            <span class="hljs-comment">// copy initialization</span>
+<span class="hljs-built_in">string</span> s3 = <span class="hljs-string">"123"</span>;           <span class="hljs-comment">// copy initialization</span>
+<span class="hljs-built_in">string</span> s4 = <span class="hljs-built_in">string</span>(<span class="hljs-number">100</span>,<span class="hljs-string">'0'</span>); <span class="hljs-comment">// copy initialization</span>
+</div></code></pre>
+<p>Copy initialization happens when</p>
+<ol>
+<li>Define variables with =</li>
+<li>Pass an object as an argument to a parameter of nonreference type</li>
+<li>Return an object from a function that has a nonreference return type</li>
+<li>Brace initialize the elements in an array or the members of an aggregate class</li>
+</ol>
+<h4 id="parameters-and-return-vales">Parameters and return vales</h4>
+<p>During a function call, parameters that have a nonreference type are copy initialized. When a function has a nonreference return type, the return value is used to copy initialize the result of the call operator.</p>
+<p>This is why the copy constructor must have a reference argument.</p>
+<h3 id="the-copy-assignment-operator">The copy-assignment operator</h3>
+<p>Copy assignment controls what happens when assign one object to another object.</p>
+<pre><code class="language-c++"><div>Foo f1, f2;
+f1 = f2; <span class="hljs-comment">// copy-assignment operator</span>
+</div></code></pre>
+<p>If not provided, the compiler will synthesize a copy-assignment operator.</p>
+<h4 id="introducing-overloaded-assignment">Introducing overloaded assignment</h4>
+<p>To write a copy-assignment operator, we need to overload assignment operator.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        Foo&amp; <span class="hljs-keyword">operator</span>=(<span class="hljs-keyword">const</span> Foo&amp;); <span class="hljs-comment">// assignmnet operator</span>
+}
+</div></code></pre>
+<p>The synthesized copy-assignment operator assign every non<code>static</code> member of right object to left object.</p>
+<h3 id="destructor">Destructor</h3>
+<p>Destructors do whatever needed to free the resources used by an object and detroy the non<code>static</code> data members of the object.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        ~Foo(); <span class="hljs-comment">// destructor</span>
+};
+</div></code></pre>
+<p>Destructor can not be overloaded, as it has not input parameters nor return types.</p>
+<h4 id="when-a-destructor-is-called">When a destructor is called</h4>
+<ol>
+<li>Variables are detroyed when they go out of scope.</li>
+<li>Members of an object are destroyed when the object of which they are a part is destroyed.</li>
+<li>Elements in a container--whether a library container or an array--are destroyed when the container is destoyed.</li>
+<li>Dynamically allocated objects are destroyed when the <code>delete</code> operator is applied to a pointer to the object.</li>
+<li>Temporary objects are destroyed at the end of the full expression in which the temperary was created.</li>
+</ol>
+<h4 id="synthesized-destructor">Synthesized destructor</h4>
+<p>If not provided, the compiler defines a synthesized destructor.</p>
+<h3 id="the-rule-of-threefive">The rule of three/five</h3>
+<p>Copy controls have five operators. They are not mandatory, but, in general, it is unusual to need one of them without needing to define them all.
+Rules:</p>
+<ol>
+<li><strong>Classes that need destructors need copy and assignment.</strong> Usually, a destructor is needed when we have to delete dynamically allocated spaces. This mean we have to write copy/copy-assignment construcotrs to allocate these spaces.</li>
+<li><strong>Classes that need copy need assignment, and vice versa.</strong></li>
+</ol>
+<h3 id="using-default">Using <code>=default</code></h3>
+<p>We can explicitly ask the compiler to generate the synthesized versions of the copy-control members.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        Foo() = <span class="hljs-keyword">default</span>; <span class="hljs-comment">// synthesized default constructor</span>
+        Foo(<span class="hljs-keyword">const</span> Foo&amp;) = <span class="hljs-keyword">default</span>; <span class="hljs-comment">// synthesized copy</span>
+        Foo &amp;<span class="hljs-keyword">operator</span>=(<span class="hljs-keyword">const</span> Foo&amp;) = <span class="hljs-keyword">default</span>; <span class="hljs-comment">// synthesized copy assignment</span>
+        ~Foo() = <span class="hljs-keyword">default</span>; <span class="hljs-comment">// synthesized destructor</span>
+};
+</div></code></pre>
+<h3 id="preventing-copies">Preventing copies</h3>
+<p>Although most classes should define a copy constructor and a copy-assignment operator, some classes prevent copies for purposes. For example, <code>iostream</code> are not allowed to copied or assigned.</p>
+<h4 id="define-a-function-as-deleted">Define a function as deleted</h4>
+<p>Recall that the compiler always generates synthesized copy/assignment constructors even if we have implemented other constructors. This means omitting copy/assignment constructors does not <em>delete</em> them. So, to disable copy/assignment constructors, we have to explicitly mark them as deleted,</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        Foo() = <span class="hljs-keyword">default</span>; <span class="hljs-comment">// synthesized default</span>
+        Foo(<span class="hljs-keyword">const</span> Foo&amp;) = <span class="hljs-keyword">delete</span>; <span class="hljs-comment">// disable copy</span>
+        Foo &amp;<span class="hljs-keyword">operator</span>=(<span class="hljs-keyword">const</span> Foo&amp;) = <span class="hljs-keyword">delete</span>; <span class="hljs-comment">// disable assignment</span>
+        ~Foo(); <span class="hljs-comment">// synthesized destructor</span>
+};
+</div></code></pre>
+<p>The <code>=delete</code> keyword must appear at declaration of the function. <code>=delete</code> keyword can also be used for other class function members to suppress some functions. But, <code>=default</code> can appear at declaration or definition of member functions. If it appears at declaration, the constructor is <code>inline</code>. Also, <code>=default</code> can only be used for constructors/destructor.</p>
+<p><strong>The destructor should not be a deleted member</strong>. If the detructor is deleted, there is not way to detroy the object of that type. The compiler will not let us define variable or create temporaries of that class. We can dynamically allocate an object of a class with deleted destructor. But, we need take care of how they can be detroyed.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        Foo() = <span class="hljs-keyword">default</span>;
+        ~Foo() = <span class="hljs-keyword">delete</span>; <span class="hljs-comment">// suppress destructor</span>
+};
+Foo f1; <span class="hljs-comment">// error, cannot not create a object without destructor</span>
+Foo *pf = <span class="hljs-keyword">new</span> Foo(); <span class="hljs-comment">// ok</span>
+<span class="hljs-keyword">delete</span> pf; <span class="hljs-comment">// error, object does not have destructor</span>
+</div></code></pre>
+<p><strong>The copy-control memebers may be synthesized as deleted.</strong></p>
+<ul>
+<li>The synthesized destructor is defined as deleted if the class has a member whose own destructor is deleted or inaccessbile (e.g. private);</li>
+<li>The synthesized copy constructor is defined as deleted if the class has a memebr whose own copy constructor is deleted or inaccessible. It is also deleted if the class has a member with a deleted or inaccessible destructor.</li>
+<li>The synthesized copy-assignment operator is defined as deleted if a member has deleted or inaccessible copy-assignment operator, of the class has a <code>const</code> or reference member;</li>
+<li>The synthesized default constructor is defined as deleted if the class has a member with a deleted default or inaccessible destructor; or has a reference member that does not have an in-class initializer; or has a const member whose type does not explicitly define a default constructor and that member does not have an in-class initializer.
+Generally speaking, these rules mean that if a class has data member that cannot be default constructed, copied, assigned or detructed, then the corresponding member will be a deleted function.</li>
+</ul>
+<h2 id="copy-control-and-resource-management">Copy control and resource management</h2>
+<p>Classes that manage resources that do not reside in the class must define the copy control members. For example, a class dynamically allocates space. Such classes require destructor to free these spaces and copy, assignment constructors to manage these resources.</p>
+<p>In order to manage these spaces, we have two choices: We can define the copy operators to make the class behave like a value or a pointer.</p>
+<h3 id="classes-that-act-like-values">Classes that act like values</h3>
+<p>To provide value-like behavior, each object has its own copy of the resources that the class manages.</p>
+<p>The copy constructor creates a new object by copying all the resources of the old one.</p>
+<p>The copy assignment firstly destroy the resources of left-hand object and the copy everything from the right-hand object. Note that, copy assignment must work if the both sides are the same object. So, the correct approach is to copy right hand to a temperary object and then delete the left-hand object.</p>
+<h3 id="classes-that-act-like-pointers">Classes that act like pointers</h3>
+<p>Pointer-like classes do not really copy the resources, instead, they create new pointers to the resources and maintain a counter to decide when to free the underlying resources. One example is <code>share_ptr</code>.</p>
+<h4 id="reference-counts">Reference counts</h4>
+<p>Reference counting works as follows:</p>
+<ul>
+<li>In addition to initializing the object, each constructor creates a counter. The counter will keep track of how many objects share state with the object we are creating.</li>
+<li>The copy constructor does not allocate a new counter; instead, it copies the data member of its given object, including the counter.</li>
+<li>The destructor decrements the counter, indicating that there is one less user of the shared state. If the count goes to zero, the destructor deletes that state.</li>
+<li>The copy-assignment operator increments the right-hand object's reference counter and decrements the left-hand object's counter.</li>
+</ul>
+<h2 id="swap">Swap</h2>
+<p>In addition to defining the copy-control members, classes that manage resources often also define a function named <code>swap</code>. Defining <code>swap</code> is particularly important for classes that we plan to use with algorithms that reorder elements, e.g. <code>sort()</code>.</p>
+<p>If a class does not define its own <code>swap</code>, library function <code>swap</code> will be called. It may not cause issues, but necessary operations might need to be done.</p>
+<p>We can overrider the default behavior of <code>swap</code> by defining a <code>swap</code> as a <code>friend</code> function.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>
+{</span>
+    <span class="hljs-function"><span class="hljs-keyword">friend</span> <span class="hljs-keyword">void</span> <span class="hljs-title">swap</span><span class="hljs-params">(Foo &amp;, Foo &amp;)</span></span>;
+}
+</div></code></pre>
+<p>Conventionally, if we call library <code>swap</code>, we write <code>std::swap</code>; otherwise, we call class-specific <code>swap</code>.</p>
+<h4 id="using-swap-in-assignment-operator">Using <code>swap</code> in assignment operator</h4>
+<p>Classes that defined <code>swap</code> often use <code>swap</code> to define their assignment operator. These operators use a technique called <strong>copy and swap</strong>.</p>
+<pre><code class="language-c++"><div><span class="hljs-comment">// Note that, here we pass rhs by value,</span>
+<span class="hljs-comment">// because after assignment, the rhs should not be changed.</span>
+<span class="hljs-comment">// As it is passed by value, the copy constructor is called.</span>
+Foo&amp; <span class="hljs-keyword">operator</span>=(Foo rhs)
+{
+    swap(*<span class="hljs-keyword">this</span>,rhs);
+    <span class="hljs-keyword">return</span> *<span class="hljs-keyword">this</span>;
+}
+</div></code></pre>
+<p>This technique can automatically handle self-assignment.</p>
+<h2 id="a-copy-control-example">A copy-control example</h2>
+<p>TBA</p>
+<h2 id="classes-that-manage-dynamic-memory">Classes that manage dynamic memory</h2>
+<p>Some classes need to allocate a varying amount of storage at runtime. Such classes can often use library containers. However, this strategy does not always work for every class and those classes need to manage their own allocation.</p>
+<h3 id="example-strvec">Example: <code>StrVec</code></h3>
+<p>TBA</p>
+<h2 id="moving-objects">Moving objects</h2>
+<p>One of the major features from C++11 is the ability to move rather than copy an object. In cases where the copied-from objects are immediately destroyed after copy, moving rather than copying is more effecient. An example of such class is <code>unique_ptr</code>.</p>
+<h3 id="rvalue-references">Rvalue references</h3>
+<p>To support move operations, C++ 11 introduced a new kind of reference: <strong>rvalue reference</strong>.</p>
+<pre><code class="language-c++"><div><span class="hljs-keyword">int</span> i = <span class="hljs-number">42</span>; <span class="hljs-comment">// ok</span>
+<span class="hljs-keyword">int</span> &amp;r = i; <span class="hljs-comment">// ok, lvalue r refers to i</span>
+<span class="hljs-keyword">int</span> &amp;&amp;rr = i; <span class="hljs-comment">// error, i is lvalue, cannot bind an rvalue to lvalue</span>
+
+<span class="hljs-keyword">int</span> &amp;r2 = i * <span class="hljs-number">42</span>; <span class="hljs-comment">// error, i*42 is rvalue</span>
+<span class="hljs-keyword">const</span> <span class="hljs-keyword">int</span> &amp;r3 = i*<span class="hljs-number">42</span>; <span class="hljs-comment">// ok, we can bind a reference to const to rvalue</span>
+<span class="hljs-keyword">int</span> &amp;&amp;rr2 = i * <span class="hljs-number">42</span>; <span class="hljs-comment">// ok, bind rvalue reference to rvalue</span>
+</div></code></pre>
+<h4 id="lvalues-persist-rvalues-are-ephemeral">Lvalues persist; Rvalues are ephemeral</h4>
+<p>Lvalues have persistent state, while rvalues are either literal or temporary objects. Because rvalues references can only be bound to temporaries, we know that</p>
+<ul>
+<li>The referred-to object is about to be destroyed</li>
+<li>There can be no other users of that object</li>
+</ul>
+<p><strong>Rvalue references are referring to rvalues but they are lvalues themselves.</strong> Thus, we can not assign a rvalue reference to a rvalue reference.</p>
+<pre><code class="language-c++"><div><span class="hljs-keyword">int</span> &amp;&amp;rr1 = <span class="hljs-number">4</span>; <span class="hljs-comment">//ok, binds to a literal</span>
+<span class="hljs-keyword">int</span> &amp;&amp;rr2 = rr1; <span class="hljs-comment">// error, rr1, as a rvalue reference, is a lvalue;</span>
+</div></code></pre>
+<h4 id="the-library-move-function">The library <code>move</code> function</h4>
+<p>The library <code>move</code> function, defined in <code>utitlity</code> header, returns rvalue reference of a lvalue.</p>
+<pre><code class="language-c++"><div><span class="hljs-keyword">int</span> &amp;&amp;rr2 = <span class="hljs-built_in">std</span>::move(rr1); <span class="hljs-comment">// ok</span>
+</div></code></pre>
+<ul>
+<li>Please note, after being moved, the moved-from object may be meaningless, so we should not use it any more.</li>
+<li>Conventionally, we should use <code>std::move</code> instead of <code>move</code> even if we have <code>using namespace std;</code></li>
+</ul>
+<h3 id="move-constructor-and-move-assignment">Move constructor and move assignment</h3>
+<p>Move and move assignment constructors are similar to copy and copy assignment, but they take over resources from their given objects instead of copying them.</p>
+<p>Move constructor takes a rvalue reference, and move constructor must ensure that the moved-from object is left in a state such that destroying them is harmless.</p>
+<pre><code class="language-c++"><div><span class="hljs-comment">// noexcept is needed</span>
+Foo::Foo(Foo &amp;&amp;) <span class="hljs-keyword">noexcept</span> {}
+</div></code></pre>
+<h4 id="move-operations-library-containers-and-exceptions">Move operations, library containers and exceptions</h4>
+<p>Because a move operation executes by taking over resources, it ordinarily does not itself allocate any resources. As a result, move operations ordinarily will not throw any exception. But it is still possible that a move constructor may throw exception. So, why do we need <code>noexcept</code> keyword for move constructor. Because library containers assume its element type move constructor should not throw exceptions, otherwise the move process might be unsafe -- moved-from objects might be lost if exception appears. Instead, library container may decide to use copy constructor rather than move constructor unless it knows the move constructor does not throw exceptions.</p>
+<h4 id="move-assignment-operator">Move-assignment operator</h4>
+<p>The move-assignment operator does the same work as the destructor and the move constructor. It must take care of self-move-assignment.</p>
+<pre><code class="language-c++"><div>Foo &amp;<span class="hljs-keyword">operator</span>=(Foo &amp;&amp;) <span class="hljs-keyword">noexcept</span>;
+</div></code></pre>
+<h4 id="a-moved-from-object-must-be-destructible">A moved-from object must be destructible</h4>
+<p>Moving from an object does not destroy that object, but somtimes after the move operation is done, the moved-from object will be destroyed. Therefore, when we write a move operation, we must ensure that the moved-from object is in a state in which the destructor can be run. In addition, move operations must guarantee that the object remains valid. One can still call its member functions and do whatever the class allows, but the results of member functions calls or the values of member variables are not meaningful.</p>
+<h4 id="synthesized-move-operations">Synthesized move operations</h4>
+<p>As it does for copy construcotr and copy-assignment operator, the compiler will, in some cases, synthesize the move constructor and move-assignment operator.</p>
+<ul>
+<li>If a class defines its own copy, copy-assignment constructor or destructor, the move constructor and move-assignment constructor are <strong>NOT</strong> synthesized.</li>
+<li>The compiler will synthesize a move constructor or a move-assignment constructor <strong>ONLY</strong> if the class does not define any of its copy-control members and if every non<code>static</code> members can be moved.</li>
+<li>The compier can move built-in types and classes with move or move-assignment constructors defined.</li>
+</ul>
+<p>Synthesized move operations are defined as <code>delete</code>d,</p>
+<ul>
+<li>If a class member defines copy operations but does not define move operations, or if the class has a member that does not define its copy operations and for which the compiler is unable to synthesize a move constructor.</li>
+<li>The move constructor or move-assignment constructor is defined as deleted if the class has a memebr whose own move constructor or move-assignment constructor is deleted or inaccessible.</li>
+<li>The move constructor is defined as deleted if the destructor is deleted or inaccessible.</li>
+<li>The mvoe-assignment operator is defined as deleted if the class has a <code>const</code> or reference memeber.</li>
+</ul>
+<h3 id="rvalue-references-and-member-functions">Rvalue references and member functions</h3>
+<p>Move-enable memebrs typically use the same parameter patterns as the copy constructors.</p>
+<pre><code class="language-c++"><div><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">push_back</span><span class="hljs-params">(<span class="hljs-keyword">const</span> X&amp;)</span></span>; <span class="hljs-comment">// copy</span>
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">push_back</span><span class="hljs-params">(X&amp;&amp;)</span></span>;  <span class="hljs-comment">// move</span>
+
+<span class="hljs-comment">// The following will not be used,</span>
+<span class="hljs-comment">// so there is no need to define them.</span>
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">push_back</span><span class="hljs-params">(X&amp;)</span></span>; <span class="hljs-comment">// when we copy, we intend not to modify object, so it should be a reference to const</span>
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">push_back</span><span class="hljs-params">(<span class="hljs-keyword">const</span> X&amp;&amp;)</span></span>; <span class="hljs-comment">// when we move, we intend to modify object, so it can't be a reference to const</span>
+
+<span class="hljs-comment">// For example</span>
+X x;
+obj.push_back(x); <span class="hljs-comment">// calling copy</span>
+obj.push_back(literal of X); <span class="hljs-comment">// calling move</span>
+</div></code></pre>
+<h4 id="reference-qualifier">Reference qualifier</h4>
+<p>Reference qualifiers can be used in the same manner as we define <code>const</code> member function -- we can place a reference qualifier after the parameter list of a non<code>static</code> member function. The reference qualifier can be either <code>&amp;</code> and <code>&amp;&amp;</code>, indicating that <code>this</code> may point to an lvalue or rvalue.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        Foo &amp;<span class="hljs-keyword">operator</span>=(<span class="hljs-keyword">const</span> Foo&amp;) &amp;; <span class="hljs-comment">// this pointer must be modifiable lvalues</span>
+        <span class="hljs-function">Foo <span class="hljs-title">sorted</span><span class="hljs-params">()</span> &amp;&amp;</span>; <span class="hljs-comment">// may run on modifiable rvalues</span>
+        <span class="hljs-function">Foo <span class="hljs-title">sorted</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span> &amp;</span>; <span class="hljs-comment">// may run on any kind of Foo</span>
+};
+
+<span class="hljs-comment">// define two functions</span>
+<span class="hljs-function">Foo &amp;<span class="hljs-title">refFoo</span><span class="hljs-params">()</span></span>; <span class="hljs-comment">// returns a lvalue reference</span>
+<span class="hljs-function">Foo <span class="hljs-title">valFoo</span><span class="hljs-params">()</span></span>;  <span class="hljs-comment">// returns a value</span>
+
+refFoo().sorted(); <span class="hljs-comment">// calling Foo sorted() &amp;&amp;</span>
+valFoo().sorted(); <span class="hljs-comment">// calling Foo sorted() const &amp;</span>
+</div></code></pre>
+<p>If a member function has a reference qualifier, all the versions of that member with the same parameter list must have reference qualifiers.</p>
+
+    </body>
+    </html>

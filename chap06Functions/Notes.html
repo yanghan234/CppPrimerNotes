@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Functions</title>
+        <style>
+</style>
+        
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item { list-style-type: none; } .task-list-item-checkbox { margin-left: -20px; vertical-align: middle; }
+</style>
+        
+        
+        
+    </head>
+    <body class="vscode-light">
+        <h1 id="functions">Functions</h1>
+<h2 id="function-basics">Function Basics</h2>
+<p>A typical function is defined as following,</p>
+<pre><code class="language-c++"><div><span class="hljs-function">return_type <span class="hljs-title">func_name</span><span class="hljs-params">(para_type1 para_name1, ...)</span>
+</span>{
+    <span class="hljs-comment">// function body</span>
+}
+</div></code></pre>
+<h3 id="local-objects">Local Objects</h3>
+<p>Objects defined within a function are not visible to the outside, with exception of static objects.</p>
+<pre><code class="language-c++"><div><span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">func</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-built_in">string</span> s;
+    <span class="hljs-keyword">return</span> s; <span class="hljs-comment">// error, local objects will be destroyed when function returns</span>
+}
+</div></code></pre>
+<ul>
+<li>Automatic objects: Objects that exist only while a block is executing are known as automatic objects, e.g. function parameters are automatic objects.</li>
+<li>Local static objects: Local static objects are initialized before the function is called for the first time. See snippet <a href="./snippet01.cpp">here</a></li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">func</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-comment">// i will be initialized as 0, automatically;</span>
+    <span class="hljs-keyword">static</span> <span class="hljs-keyword">int</span> i;
+    <span class="hljs-built_in">cout</span> &lt;&lt; i &lt;&lt; <span class="hljs-built_in">endl</span>;
+    i++;
+}
+</div></code></pre>
+<h3 id="function-declaration">Function Declaration</h3>
+<p>A function declaration defines return type, function name and types of parameter list. Function declarations are also known as <strong>function prototype</strong>(函数原型).
+Function declarations usually go in header files.</p>
+<h3 id="separate-compilation">Separate Compilation</h3>
+<p>C++ codes can be written in separate files and can be compiled separately.</p>
+<h2 id="argument-passing">Argument passing</h2>
+<p>There are three ways to pass arguments to a function:</p>
+<ol>
+<li>Pass by reference: if a parameter is reference. When the function is called, the reference is binded to the argument and thus the argument does not need to be copied.</li>
+<li>Pass by pointer: if a parameter is a pointer</li>
+<li>Pass by value: if a parameter is not a reference or pointer. The arguments need to be copied to the parameters in the function.</li>
+</ol>
+<pre><code class="language-c++"><div><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">func</span><span class="hljs-params">(Type a)</span></span>; <span class="hljs-comment">// pass by value</span>
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">func</span><span class="hljs-params">(Type &amp;a)</span></span>; <span class="hljs-comment">// pass by reference</span>
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">func</span><span class="hljs-params">(Type *a)</span></span>; <span class="hljs-comment">// pass by pointer</span>
+</div></code></pre>
+<h3 id="using-references-to-avoid-copies">Using references to avoid copies</h3>
+<p>References are just alias, so the arguments themselves do not need to be copied, thus making references are more efficient compared to passing by values. For primitive types, these copies might not make too much difference, but for user-defined types, the copies cost might not be negligible. See <a href="./snippet02.cpp">snippet02</a></p>
+
+    </body>
+    </html>

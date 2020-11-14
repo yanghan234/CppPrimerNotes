@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Sequential containers</title>
+        <style>
+</style>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" integrity="sha384-yFRtMMDnQtDRO8rLpMIKrtPCD5jdktao2TV19YiZYWMDkUR5GQZR/NOVTdquEx1j" crossorigin="anonymous">
+<link href="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.css" rel="stylesheet" type="text/css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item { list-style-type: none; } .task-list-item-checkbox { margin-left: -20px; vertical-align: middle; }
+</style>
+        
+        <script src="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.js"></script>
+        
+    </head>
+    <body class="vscode-light">
+        <ul>
+<li><a href="#sequential-containers">Sequential containers</a>
+<ul>
+<li><a href="#overview-of-sequential-containers">Overview of sequential containers</a></li>
+<li><a href="#container-library-overview">Container Library Overview</a>
+<ul>
+<li><a href="#iterators">Iterators</a></li>
+<li><a href="#container-type-members">Container type members</a></li>
+<li><a href="#begin-and-end-members"><code>begin</code> and <code>end</code> members</a></li>
+<li><a href="#defining-and-initializing-container">Defining and initializing container</a></li>
+<li><a href="#assignment-ans-swap">Assignment ans <code>swap</code></a></li>
+<li><a href="#container-size-operation">Container size operation</a></li>
+<li><a href="#relational-operations">Relational operations</a></li>
+</ul>
+</li>
+<li><a href="#sequential-container-operations">Sequential container operations</a>
+<ul>
+<li><a href="#adding-elements">Adding elements</a></li>
+<li><a href="#accessing-elements">Accessing elements</a></li>
+<li><a href="#erasing-elements">Erasing elements</a></li>
+<li><a href="#resizing-a-container">Resizing a container</a></li>
+<li><a href="#operations-may-invalidate-iterators">Operations may invalidate iterators</a></li>
+</ul>
+</li>
+<li><a href="#how-a-vector-grows">How a <code>vector</code> grows</a></li>
+<li><a href="#additional-string-operations">Additional <code>string</code> operations</a>
+<ul>
+<li><a href="#other-ways-to-construct-strings">Other ways to construct strings</a></li>
+<li><a href="#substr-operation"><code>substr</code> operation</a></li>
+<li><a href="#insert-erase-assign-append-replace">insert, erase, assign, append, replace</a></li>
+<li><a href="#search-in-string">Search in string</a></li>
+<li><a href="#compare-function"><code>compare</code> function</a></li>
+<li><a href="#conversions-between-strings-to-numbers">Conversions between strings to numbers</a></li>
+</ul>
+</li>
+<li><a href="#container-adaptors">Container adaptors</a>
+<ul>
+<li><a href="#stack-api"><code>stack</code> API</a></li>
+<li><a href="#queue-and-priority_queue-api"><code>queue</code> and <code>priority_queue</code> API</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="sequential-containers">Sequential containers</h1>
+<h2 id="overview-of-sequential-containers">Overview of sequential containers</h2>
+<p>A container holds a collection of objects of a specified type. <strong>Sequential containers</strong> store elements by the order of insertion. By contrast, ordered and unordered associative containers store elements by the order of keys.</p>
+<table>
+<thead>
+<tr>
+<th>Containers</th>
+<th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vector</code></td>
+<td style="text-align:left">Flexible-size array. Random access. Inserting or deleting other than at the back may be slow</td>
+</tr>
+<tr>
+<td><code>deque</code></td>
+<td style="text-align:left">Double-ended queue. Random access. Fast insert/delete at front or back</td>
+</tr>
+<tr>
+<td><code>list</code></td>
+<td style="text-align:left">Doubly lined list. Supports only bidirectional sequential access. Fast insert/delete at any point in the list</td>
+</tr>
+<tr>
+<td><code>forward_list</code></td>
+<td style="text-align:left">Singly linked list. Supports only sequential access in on direction. Fast insert/delete at ny point in the list</td>
+</tr>
+<tr>
+<td><code>array</code></td>
+<td style="text-align:left">Fixed-size array. Random access. Cannot add or remove elements</td>
+</tr>
+</tbody>
+</table>
+<h2 id="container-library-overview">Container Library Overview</h2>
+<p>Containers can store almost all types, but if we want to give an initial size of the container, the type must have a default constructor.</p>
+<pre><code class="language-c++"><div><span class="hljs-comment">// snippet01.cpp</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">A</span>
+{</span>
+    <span class="hljs-keyword">private</span>:
+        <span class="hljs-keyword">int</span> _a;
+        <span class="hljs-built_in">string</span> _s;
+    <span class="hljs-keyword">public</span>:
+        A(<span class="hljs-keyword">int</span> a) : _a(a), _s(<span class="hljs-string">""</span>){}
+        A(<span class="hljs-built_in">string</span> s) : _a(<span class="hljs-number">0</span>), _s(s){}
+};
+
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-function">A <span class="hljs-title">a1</span><span class="hljs-params">(<span class="hljs-number">1</span>)</span></span>;
+    <span class="hljs-function">A <span class="hljs-title">a2</span><span class="hljs-params">(<span class="hljs-string">"12"</span>)</span></span>;
+    <span class="hljs-built_in">vector</span>&lt;A&gt; v1;              <span class="hljs-comment">// ok, empty container</span>
+    <span class="hljs-comment">// vector&lt;A&gt; v2(10);       // error, class A has no default constructor</span>
+    <span class="hljs-built_in">vector</span>&lt;A&gt; v3(<span class="hljs-number">10</span>,<span class="hljs-number">1</span>);        <span class="hljs-comment">// ok, using implicit class type conversion</span>
+    <span class="hljs-comment">// vector&lt;A&gt; v4(10,"123"); // error, because "123" -&gt; string("123") -&gt; A(string("123"))</span>
+                               <span class="hljs-comment">// requires two-step conversion</span>
+    <span class="hljs-built_in">vector</span>&lt;A&gt; v5(<span class="hljs-number">10</span>,<span class="hljs-built_in">string</span>(<span class="hljs-string">"123"</span>)); <span class="hljs-comment">// ok, using implicit class type conversion</span>
+    <span class="hljs-built_in">vector</span>&lt;A&gt; v6(<span class="hljs-number">10</span>,A(<span class="hljs-number">12</span>));         <span class="hljs-comment">// ok, explicitly call constructor</span>
+    <span class="hljs-built_in">vector</span>&lt;A&gt; v7(<span class="hljs-number">10</span>,A(<span class="hljs-string">"123"</span>));      <span class="hljs-comment">// ok, explicitly call constructor</span>
+}
+</div></code></pre>
+<h3 id="iterators">Iterators</h3>
+<p>An <strong>iterator range</strong> is denoted by a pair of iterators, one refers an element (say first one) and the other one usually points to one step after last element. In most cases, the pair is <code>iterator.begin()</code> and <code>iterator.end()</code>. The element range is left-inclusive and right-exclusive, i.e. iterators within <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">[</mo><mrow><mi mathvariant="normal">b</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">g</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">n</mi></mrow><mo separator="true">,</mo><mrow><mi mathvariant="normal">e</mi><mi mathvariant="normal">n</mi><mi mathvariant="normal">d</mi></mrow><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">[\mathrm{begin},\mathrm{end})</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord"><span class="mord mathrm">b</span><span class="mord mathrm">e</span><span class="mord mathrm" style="margin-right:0.01389em;">g</span><span class="mord mathrm">i</span><span class="mord mathrm">n</span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord mathrm">e</span><span class="mord mathrm">n</span><span class="mord mathrm">d</span></span><span class="mclose">)</span></span></span></span> are valid.</p>
+<pre><code class="language-c++"><div><span class="hljs-built_in">vector</span>&lt;<span class="hljs-keyword">int</span>&gt; a;
+<span class="hljs-comment">// add something to a</span>
+<span class="hljs-built_in">vector</span>&lt;<span class="hljs-keyword">int</span>&gt;::iterator it = a.begin();
+<span class="hljs-keyword">while</span> ( it != a.end() ) <span class="hljs-comment">// iterstors support !=, ==, but do not support &lt;, &gt;</span>
+    it++;
+</div></code></pre>
+<h3 id="container-type-members">Container type members</h3>
+<table>
+<thead>
+<tr>
+<th>Type member</th>
+<th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>iterator</code></td>
+<td style="text-align:left">Container iterator</td>
+</tr>
+<tr>
+<td><code>const_iterator</code></td>
+<td style="text-align:left">Iterator type the can read but not change its element</td>
+</tr>
+<tr>
+<td><code>size_type</code></td>
+<td style="text-align:left">unsigned integral type big enough to hold the size of the largest possible container of this type</td>
+</tr>
+<tr>
+<td><code>difference_type</code></td>
+<td style="text-align:left">Signed integral type big enough to hold the distance between two elements</td>
+</tr>
+<tr>
+<td><code>value_type</code></td>
+<td style="text-align:left">Element type</td>
+</tr>
+<tr>
+<td><code>reference_type</code></td>
+<td style="text-align:left">Element's lvalue type; synonym for <code>value_type&amp;</code></td>
+</tr>
+<tr>
+<td><code>const_reference</code></td>
+<td style="text-align:left">Element's <code>const</code> lvalye type, <code>const value_type&amp;</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="begin-and-end-members"><code>begin</code> and <code>end</code> members</h3>
+<p>The <code>begin</code> and <code>end</code> operators yield iterators that refer to the first and one past the last element in the container. There are several version of the operators.</p>
+<pre><code class="language-c++"><div><span class="hljs-built_in">list</span>&lt;<span class="hljs-built_in">string</span>&gt; a = {<span class="hljs-string">"123"</span>,<span class="hljs-string">"dfa"</span>};
+<span class="hljs-comment">// begin and cbegin, ++operator moves to next one;</span>
+<span class="hljs-keyword">auto</span> it1 = a.begin();   <span class="hljs-comment">// list&lt;string&gt;::iterator</span>
+<span class="hljs-keyword">auto</span> it2 = a.cbegin();  <span class="hljs-comment">// list&lt;string&gt;::const_iterator, c++11</span>
+<span class="hljs-comment">// rbegin and crbegin, ++operator moves to previous one;</span>
+<span class="hljs-keyword">auto</span> it3 = a.rbegin();  <span class="hljs-comment">// list&lt;string&gt;::reverse_iterator</span>
+<span class="hljs-keyword">auto</span> it4 = a.crbegin(); <span class="hljs-comment">// list&lt;string&gt;::const_reverse_iterator, c++11</span>
+</div></code></pre>
+<h3 id="defining-and-initializing-container">Defining and initializing container</h3>
+<p>All containers but <code>array</code> have a default constructor that creates an empty container. Because the size of <code>array</code> can not be changed, so its size must be provided.</p>
+<ul>
+<li>Initializing a container as a copy of another<pre><code class="language-c++"><div><span class="hljs-function">C <span class="hljs-title">c1</span><span class="hljs-params">(c2)</span></span>;  <span class="hljs-comment">// copy C2 to C1</span>
+C c1 = c2; <span class="hljs-comment">// copy C2 to C1 </span>
+<span class="hljs-function">C <span class="hljs-title">c1</span><span class="hljs-params">(iterator of c2, iterator of c2)</span></span>; <span class="hljs-comment">// copy elements in C2 between two iterators</span>
+</div></code></pre>
+</li>
+<li>List initialization<pre><code class="language-c++"><div><span class="hljs-built_in">list</span>&lt;<span class="hljs-built_in">string</span>&gt; l = {<span class="hljs-string">"123"</span>,<span class="hljs-string">"2234"</span>};
+</div></code></pre>
+</li>
+<li>Sequential container size-related constructor<pre><code class="language-c++"><div><span class="hljs-function">C <span class="hljs-title">c</span><span class="hljs-params">(size)</span></span>;        <span class="hljs-comment">// initialize container with size elements</span>
+<span class="hljs-function">C <span class="hljs-title">c</span><span class="hljs-params">(size, init)</span></span>;  <span class="hljs-comment">// initialize container with size elements, each has value of init</span>
+</div></code></pre>
+</li>
+<li><code>array</code> container is a little bit different. Its size is fixed, so the size of an array should be included in type.<pre><code class="language-c++"><div><span class="hljs-built_in">array</span>&lt;<span class="hljs-keyword">int</span>,43&gt; a1;
+<span class="hljs-built_in">array</span>&lt;<span class="hljs-built_in">string</span>,10&gt; a2;
+</div></code></pre>
+</li>
+</ul>
+<h3 id="assignment-ans-swap">Assignment ans <code>swap</code></h3>
+<p>Assignment and swap operators</p>
+<pre><code class="language-c++"><div>c1 = c2;     <span class="hljs-comment">// assign c2 to c1</span>
+swap(c1,c2); <span class="hljs-comment">// swap c1 and c2</span>
+c1.swap(c2); <span class="hljs-comment">// swap c1 and c2</span>
+c1.assign(b,e); <span class="hljs-comment">// two iterators of another container</span>
+c1.assign(il);  <span class="hljs-comment">// replace leading elements with the initializer list</span>
+c1.assign(n,t); <span class="hljs-comment">// replace n elements with value t</span>
+</div></code></pre>
+<h3 id="container-size-operation">Container size operation</h3>
+<pre><code class="language-c++"><div>c.size();  <span class="hljs-comment">// return size of container</span>
+c.empty(); <span class="hljs-comment">// return if the container is empty</span>
+</div></code></pre>
+<h3 id="relational-operations">Relational operations</h3>
+<p>Every container type supports the equality operators (== and !=); all the containers except unordered associative containers also support the relational operators (&gt;, &gt;=, &lt;, &lt;=). If the data type in the container is user-defined, it must support relational operators. See <a href="./snippet02.cpp">snippet02</a>.</p>
+<h2 id="sequential-container-operations">Sequential container operations</h2>
+<h3 id="adding-elements">Adding elements</h3>
+<ul>
+<li>Using <code>push_back</code>: add to the end</li>
+<li>Using <code>push_front</code>: add to the beginning</li>
+<li>Using <code>insert</code>:<pre><code class="language-c++"><div>c.insert(iter,n,t); <span class="hljs-comment">// insert n elements with value of t from iter</span>
+c.insert(iter,it1,it2); <span class="hljs-comment">// insert from iter elements between it1 and it2</span>
+c.insert(iter,li); <span class="hljs-comment">// li is a list of elements</span>
+</div></code></pre>
+<code>insert</code> method returns the location of insertion, i.e. iter.</li>
+<li>Using emplace methods: <code>emplace_back</code>, <code>emplace_front</code> and <code>emplace</code> can put element to the back, front or a specified location in the container. <code>emplace</code> methods take the arguments, pass them to the constructor of its data type and put the created object in container.</li>
+</ul>
+<h3 id="accessing-elements">Accessing elements</h3>
+<ul>
+<li>subscript operator([]): valid for <code>string</code>, <code>vector</code>, <code>deque</code>, and <code>array</code>, but invalid for <code>list</code> and <code>forward_list</code>.</li>
+<li>using iterator: valid for all sequential containers</li>
+<li><code>back</code> and <code>front</code>: back and front return the last and first element.</li>
+</ul>
+<p>The members that access elements in a container return references. If the container is a <code>const</code> object, the return is a reference to <code>const</code>. Otherwise, the return is an ordinary reference.</p>
+<h3 id="erasing-elements">Erasing elements</h3>
+<ul>
+<li><code>pop_front</code> and <code>pop_back</code> remove the first and last element in the container. <code>forward_list</code> does not support <code>pop_back</code>.</li>
+<li><code>erase(iter)</code> removes the element at iterator iter. <code>erase(it1,it2)</code> removes elements between it1 and it2.</li>
+<li><code>clear()</code> delete all elements in the container.</li>
+</ul>
+<h3 id="resizing-a-container">Resizing a container</h3>
+<p>Using <code>resize(newsize)</code> to set the container to newsize.</p>
+<h3 id="operations-may-invalidate-iterators">Operations may invalidate iterators</h3>
+<p>If elements in a container are removed or added during a loop using iterators, the iterators may be invalid due to the fact that the container itself has been modified.</p>
+<ul>
+<li>Using returned iterator: <code>vector</code>, <code>string</code> and <code>deque</code> can return valid iterators after modification.</li>
+<li>Do not try to cache end iterator, because the end may also be changed. Always use the method <code>end()</code> to access end iterator.</li>
+</ul>
+<h2 id="how-a-vector-grows">How a <code>vector</code> grows</h2>
+<p><code>vector</code> reserves some space beforehand. If the space is used up, it reserves a new chunk of space for future usage. If the space used is smaller than a certain threshold, the reserved space is shrinked. By default, <code>vector</code> size is expanded as 0, 1, 2, 4, ..., 2^n.
+The resizing process is done automatically, but it can also be done per the request of users with API</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>reserve(n)</code></td>
+<td style="text-align:left">Allocate space for at least n elements</td>
+</tr>
+<tr>
+<td><code>capacity()</code></td>
+<td style="text-align:left">Number of elements can have before reallocation is necessary</td>
+</tr>
+<tr>
+<td><code>shrink_to_fit()</code></td>
+<td style="text-align:left">Request to reduce capacity() to equal size()</td>
+</tr>
+<tr>
+<td><code>size()</code></td>
+<td style="text-align:left">The space that has been used</td>
+</tr>
+</tbody>
+</table>
+<h2 id="additional-string-operations">Additional <code>string</code> operations</h2>
+<h3 id="other-ways-to-construct-strings">Other ways to construct strings</h3>
+<pre><code class="language-c++"><div><span class="hljs-function"><span class="hljs-built_in">string</span> <span class="hljs-title">s</span><span class="hljs-params">(cp,n)</span></span>; <span class="hljs-comment">// cp is a char* array, s convert n characters to c++ string</span>
+<span class="hljs-function"><span class="hljs-built_in">string</span> <span class="hljs-title">s</span><span class="hljs-params">(s2,pos)</span></span>; <span class="hljs-comment">// s copy characters in s2 from pos</span>
+<span class="hljs-function"><span class="hljs-built_in">string</span> <span class="hljs-title">s</span><span class="hljs-params">(s2,pos,len)</span></span>; <span class="hljs-comment">// s copy len characters in s2 from pos</span>
+</div></code></pre>
+<h3 id="substr-operation"><code>substr</code> operation</h3>
+<pre><code class="language-c++"><div><span class="hljs-built_in">string</span> s2 = s.substr(pos,n);  <span class="hljs-comment">// copy n characters in s from pos</span>
+<span class="hljs-built_in">string</span> s2 = s.substr(pos);  <span class="hljs-comment">// copy characters in s from pos</span>
+</div></code></pre>
+<h3 id="insert-erase-assign-append-replace">insert, erase, assign, append, replace</h3>
+<h3 id="search-in-string">Search in string</h3>
+<pre><code class="language-c++"><div><span class="hljs-keyword">char</span> c;
+<span class="hljs-built_in">string</span> s, t;
+s.find(c,pos=<span class="hljs-number">0</span>);
+s.find(t,pos=<span class="hljs-number">0</span>);  <span class="hljs-comment">// find the first occurance of t in s from pos</span>
+s.find(t,pos,n);  <span class="hljs-comment">// find the first occurance of t in s from pos in the next n characters;</span>
+s.rfind(t); <span class="hljs-comment">// find the last occurance of t in s</span>
+</div></code></pre>
+<h3 id="compare-function"><code>compare</code> function</h3>
+<pre><code class="language-c++"><div><span class="hljs-keyword">char</span>* cp; <span class="hljs-comment">// c-style string</span>
+<span class="hljs-built_in">string</span> s1, s2;
+s1.compare(s2); <span class="hljs-comment">// compare s1 to s2</span>
+s1.compare(pos1,n1,s2); <span class="hljs-comment">// compare s1.substr(pos1,n1) to s2</span>
+s1.compare(pos1,n1,s2,pos2,n2); <span class="hljs-comment">// compare s1.substr(pos1,n1) and s2.substr(pos2,n2);</span>
+<span class="hljs-comment">// s2 can be replaced with cp</span>
+</div></code></pre>
+<h3 id="conversions-between-strings-to-numbers">Conversions between strings to numbers</h3>
+<pre><code class="language-c++"><div>to_string(val);   <span class="hljs-comment">// val to string</span>
+
+stoi(s,p,b=<span class="hljs-number">10</span>);   <span class="hljs-comment">// convert string s from p to int, default base is 10</span>
+stol(s,p,b=<span class="hljs-number">10</span>);   <span class="hljs-comment">// convert string s from p to long, default base is 10</span>
+stoul(s,p,b=<span class="hljs-number">10</span>);  <span class="hljs-comment">// convert string s from p to unsigned long, default base is 10</span>
+stoll(s,p,b=<span class="hljs-number">10</span>);  <span class="hljs-comment">// convert string s from p to long long, default base is 10</span>
+stoull(s,p,b=<span class="hljs-number">10</span>); <span class="hljs-comment">// convert string s from p to unsigned long long, default base is 10</span>
+stof(s,p)         <span class="hljs-comment">// string to float</span>
+stod(s,p)         <span class="hljs-comment">// string to double</span>
+stold(s,p)        <span class="hljs-comment">// string to long double</span>
+</div></code></pre>
+<h2 id="container-adaptors">Container adaptors</h2>
+<p>In addition to sequential containers, the library defines three sequential container adaptors, <code>stack</code>, <code>queue</code> and <code>priority_queue</code>. <strong>Container adaptors</strong> take seqential containers and make them work as if they are stack, queue or priority queue. As example,</p>
+<pre><code class="language-c++"><div><span class="hljs-built_in">stack</span>&lt;<span class="hljs-keyword">int</span>,<span class="hljs-built_in">vector</span>&lt;<span class="hljs-keyword">int</span>&gt;&gt; svec; <span class="hljs-comment">// stack implemented with vector</span>
+<span class="hljs-built_in">queue</span>&lt;<span class="hljs-keyword">int</span>,<span class="hljs-built_in">vector</span>&lt;<span class="hljs-keyword">int</span>&gt;&gt; qvec; <span class="hljs-comment">// queue implemented with vector</span>
+priority_queue&lt;<span class="hljs-keyword">int</span>,<span class="hljs-built_in">vector</span>&lt;<span class="hljs-keyword">int</span>&gt;&gt; pqvec; <span class="hljs-comment">// priority queue implemented with vector</span>
+</div></code></pre>
+<p>By default, <code>stack</code> and <code>queue</code> use <code>deque</code> while <code>priority_queue</code> uses <code>vector</code> to implement the adaptor.</p>
+<h3 id="stack-api"><code>stack</code> API</h3>
+<pre><code class="language-c++"><div>s.pop();         <span class="hljs-comment">// removes, but does not return, the top element</span>
+s.push(item);    <span class="hljs-comment">// push to stack</span>
+s.emplace(args); <span class="hljs-comment">// pass args to element constructor</span>
+s.top();         <span class="hljs-comment">// access last element without removing</span>
+</div></code></pre>
+<h3 id="queue-and-priority_queue-api"><code>queue</code> and <code>priority_queue</code> API</h3>
+<pre><code class="language-c++"><div>q.pop();        <span class="hljs-comment">// removes front element, but does not return, the front element</span>
+q.front();      <span class="hljs-comment">// returns, but does not remove, the front element</span>
+q.back();       <span class="hljs-comment">// Valid only for queue</span>
+q.top();        <span class="hljs-comment">// Valid only for priority_queue</span>
+q.push(item);   <span class="hljs-comment">// add element to queue / priority_queue</span>
+q.emplace(args);
+</div></code></pre>
+
+    </body>
+    </html>

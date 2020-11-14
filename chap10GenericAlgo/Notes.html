@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Generic algorithms</title>
+        <style>
+</style>
+        
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item { list-style-type: none; } .task-list-item-checkbox { margin-left: -20px; vertical-align: middle; }
+</style>
+        
+        
+        
+    </head>
+    <body class="vscode-light">
+        <ul>
+<li><a href="#generic-algorithms">Generic algorithms</a>
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#a-fisrt-look-at-the-algorithms">A fisrt look at the algorithms</a>
+<ul>
+<li><a href="#read-only-algorithms">Read-only algorithms</a></li>
+<li><a href="#algorithms-that-write-container-elements">Algorithms that write container elements</a></li>
+<li><a href="#algorithms-that-reorder-container-elements">Algorithms that reorder container elements</a></li>
+</ul>
+</li>
+<li><a href="#customizing-operations">Customizing operations</a>
+<ul>
+<li><a href="#predicates">Predicates</a></li>
+<li><a href="#lambda-expressions">Lambda expressions</a></li>
+<li><a href="#lambda-captures-and-returns">Lambda captures and returns</a></li>
+<li><a href="#binding-arguments">Binding arguments</a></li>
+</ul>
+</li>
+<li><a href="#revisiting-iterators">Revisiting iterators</a>
+<ul>
+<li><a href="#insert-iterators">Insert iterators</a></li>
+<li><a href="#iostream-iterators"><code>iostream</code> iterators</a></li>
+<li><a href="#reverse-iterators">Reverse iterators</a></li>
+</ul>
+</li>
+<li><a href="#structure-of-generic-algorithms">Structure of generic algorithms</a>
+<ul>
+<li><a href="#the-five-iterator-categories">The five iterator categories</a></li>
+<li><a href="#algorithm-parameter-patterns">Algorithm parameter patterns</a></li>
+<li><a href="#algorithm-naming-conventions">Algorithm naming conventions</a></li>
+</ul>
+</li>
+<li><a href="#container-specific-algorithms">Container-specific algorithms</a>
+<ul>
+<li><a href="#the-splice-members">The <code>splice</code> members</a></li>
+<li><a href="#list-specific-operations-change-the-containers">List-specific operations change the containers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="generic-algorithms">Generic algorithms</h1>
+<p><strong>Generic algorithms</strong> are a set of functions that can be used to generic data type.</p>
+<h2 id="overview">Overview</h2>
+<p>Most of the algorithms are defined in <code>algorithm</code> header; with some other algorithms defined in <code>numeric</code> header.</p>
+<p>In general, the algorithms do not work directly on a container. Instread, they operate by traversing a range of elements bounded by two iterators.
+Keynotes:</p>
+<ul>
+<li>Iterators make the algorithms decoupled with containers.</li>
+<li>Algorithms do depend on element-type operations: e.g. <code>sort()</code> requires element type with relationship operators implemented.</li>
+</ul>
+<h2 id="a-fisrt-look-at-the-algorithms">A fisrt look at the algorithms</h2>
+<p>With only a few exceptions, the algorithms operate over a range of elements, denoted with iterators.</p>
+<h3 id="read-only-algorithms">Read-only algorithms</h3>
+<ol>
+<li><code>accumulate</code> defined in <code>numeric</code>.<pre><code class="language-c++"><div>accumulate(it1, it2, inital_value);
+</div></code></pre>
+This function returns sum of elements between iterators <code>it1</code> and <code>it2</code> and <code>initial_value</code>. This requires that the element type must be able to converted to the type of <code>initial_value</code>.</li>
+<li><code>equal</code> determines if elements in two containers are the same<pre><code class="language-c++"><div>equal(v1.cbegin(),v1.cend(),v2.cbegin());
+</div></code></pre>
+The element type in container must implement <code>==</code> operator.</li>
+</ol>
+<h3 id="algorithms-that-write-container-elements">Algorithms that write container elements</h3>
+<ol>
+<li><code>fill</code> function fills a range with provided value<pre><code class="language-c++"><div>fill(vec.begin(),vec.end(),<span class="hljs-number">1</span>);
+</div></code></pre>
+</li>
+<li><code>fill_n</code> function fills n elements<pre><code class="language-c++"><div>fill_n(vec.begin(),n,<span class="hljs-number">1</span>);
+</div></code></pre>
+</li>
+</ol>
+<p><strong>Note</strong>: Algorithms that write to a destination iterator assume the desination is large enough to hold the number of elements being written. One way to ensure that an algorithm has enough elements to hold the output is to use an <strong>insert iterator</strong>.
+<strong>back_inserter</strong>: <code>back_inserter</code> is defined in the <code>iterator</code> header and is used for inserting to the end of a container.
+<code>c++     vector&lt;int&gt; vec;     fill_n(back_inserter(vec),n,0);     </code>
+When a <code>back_inserter</code> is passed to an algorithm, each assignment will call <code>push_back</code>.</p>
+<ol start="3">
+<li>Copy algorithms:<pre><code class="language-c++"><div>copy(v1.it1, v1.it2, v2.it); <span class="hljs-comment">// values in v1 to v2</span>
+replace(v.begin(),v.end(),old_value,new_value);
+replace_copy(v1.it1, v1.it2, back_insert(v2),old_value,new_value); <span class="hljs-comment">// copy v1 to v2 and replace old with new value.</span>
+</div></code></pre>
+</li>
+</ol>
+<h3 id="algorithms-that-reorder-container-elements">Algorithms that reorder container elements</h3>
+<ol>
+<li>sort(): sort container</li>
+<li>unique(): rearrange the input range to eliminate adjacent duplicated entries</li>
+</ol>
+<h2 id="customizing-operations">Customizing operations</h2>
+<h3 id="predicates">Predicates</h3>
+<p>A predicate is an expression that can be called and that returns a value that can be used as a condition. The predicates used by library algorithms are either <strong>unary predicates</strong> or <strong>binary predicates</strong>. For example, sort() algorithm takes a binary predicate,</p>
+<pre><code class="language-c++"><div><span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">compare</span><span class="hljs-params">(<span class="hljs-keyword">const</span> <span class="hljs-built_in">string</span> &amp;s1, <span class="hljs-keyword">const</span> <span class="hljs-built_in">string</span> &amp;s2)</span>
+</span>{
+    <span class="hljs-keyword">return</span> s1.size() &lt; s2.size();
+}
+<span class="hljs-built_in">vector</span>&lt;<span class="hljs-built_in">string</span>&gt; vec;
+sort(vec.begin(),vec.end(),compare);
+</div></code></pre>
+<h3 id="lambda-expressions">Lambda expressions</h3>
+<p>The predicates can be lamda expressions. A lambda expression represents a callable unit of code. It can be thought as an unnamed, inline function.</p>
+<pre><code class="language-c++"><div>[capture <span class="hljs-built_in">list</span>](parameter <span class="hljs-built_in">list</span>) -&gt; <span class="hljs-keyword">return</span> type { function body }
+</div></code></pre>
+<p>Capture list gives access of local variables out of the lambda expression.</p>
+<h3 id="lambda-captures-and-returns">Lambda captures and returns</h3>
+<p>When we define a lambda, the compiler generates a new unnamed class type that correspond to that lambda and an object to that type.</p>
+<ul>
+<li>Capture by value<pre><code class="language-c++"><div>[v](parameter <span class="hljs-built_in">list</span>)-&gt;<span class="hljs-keyword">return</span> type { function body }; <span class="hljs-comment">// v is captured by value</span>
+</div></code></pre>
+</li>
+<li>Capture by reference<pre><code class="language-c++"><div>[&amp;v](parameter <span class="hljs-built_in">list</span>)-&gt;<span class="hljs-keyword">return</span> type { function body }; <span class="hljs-comment">// v is captured by reference</span>
+</div></code></pre>
+When we capture a variable by reference, we must make sure the variable must exist at the time lambda being executed.</li>
+<li>Implicit captures<pre><code class="language-c++"><div>[=](parameter <span class="hljs-built_in">list</span>)-&gt; <span class="hljs-keyword">return</span> type { function body}; <span class="hljs-comment">// capture all local variables by value</span>
+[&amp;](parameter <span class="hljs-built_in">list</span>)-&gt; <span class="hljs-keyword">return</span> type { function body}; <span class="hljs-comment">// capture all local variables by reference</span>
+[=,&amp;v](parameter <span class="hljs-built_in">list</span>)-&gt; <span class="hljs-keyword">return</span> type { function body}; <span class="hljs-comment">// capture all local variables by value except v, v is captured by reference</span>
+[&amp;,v](parameter <span class="hljs-built_in">list</span>)-&gt; <span class="hljs-keyword">return</span> type { function body}; <span class="hljs-comment">// capture all local variables by reference except v, v is captured by value</span>
+</div></code></pre>
+</li>
+<li>Mutable lambdas
+Mutable lambda expression can change values of varaibles even if they are passed by value.<pre><code class="language-c++"><div>[]() <span class="hljs-keyword">mutable</span> -&gt;<span class="hljs-keyword">return</span> type{};
+</div></code></pre>
+</li>
+</ul>
+<h3 id="binding-arguments">Binding arguments</h3>
+<p>The function <code>bind</code>, defined in <code>functional</code> header, takes a callable object and generates a new callable that adapts the parameter list of the original object.</p>
+<pre><code class="language-c++"><div><span class="hljs-keyword">auto</span> newCallable = bind(oldCallable, arg_list);
+</div></code></pre>
+<p>The arg_list specifies the arguments passed to oldCallable. The arg_list may include names of the form <code>_n</code>, where n is an integer. These arguments are placeholders represnting the n-th argument of newCallable.</p>
+<h2 id="revisiting-iterators">Revisiting iterators</h2>
+<p>In addition to the iterators for each of containers, the library defines several additional kinds of iterators in the <code>iterator</code> header.</p>
+<ul>
+<li>Insert iterators: These iterators are bound to a container and can be used to insert elements into the container</li>
+<li>Stream iterators: These iterators are bound to input or output streams and can be used to iterate through the associated IO stream</li>
+<li>Reverse iterators: These iterators move backward, rather than forward. The library containers, other than <code>forward_list</code>, have reverse iterators.</li>
+<li>Move iterators: The special-purpose iterators move rather than copy their elements.</li>
+</ul>
+<h3 id="insert-iterators">Insert iterators</h3>
+<p>An inserter is an iterator adaptor that takes a container and yields an iterator that adds elements to the specifies container. Note, inserters call container operations.</p>
+<ul>
+<li><code>back_inserter</code>: creates an iterator that uses <code>push_back</code></li>
+<li><code>front_inserter</code>: creates an iterator that uses <code>push_front</code></li>
+<li><code>inserter</code>: creates an iterator that uses <code>insert</code>
+<code>back_inserter</code> and <code>front_inserter</code> take a container as argument, while <code>inserter</code> takes a container and a regular iterator of that container.</li>
+</ul>
+<h3 id="iostream-iterators"><code>iostream</code> iterators</h3>
+<p>Even though <code>iostream</code> types are not containers, there are iterators that can be used with objects of the IO types, <code>istream_iterator</code> and <code>ostream_iterator</code>.</p>
+<p><strong>I don't understand why this is necessary though.</strong></p>
+<h3 id="reverse-iterators">Reverse iterators</h3>
+<ol>
+<li>The containers, except <code>forward_list</code>, have reverse iterators, <code>rbegin</code>, <code>rend</code>, <code>crbegin</code> and <code>crend</code>.</li>
+<li>Incrementing(++) a reverse iterator moves the iterator to the previous element. Decrementing(--) a reverse iterator moves to the next element.</li>
+</ol>
+<h2 id="structure-of-generic-algorithms">Structure of generic algorithms</h2>
+<h3 id="the-five-iterator-categories">The five iterator categories</h3>
+<table>
+<thead>
+<tr>
+<th>Iterator</th>
+<th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Input iterator</td>
+<td style="text-align:left">Read, but not write; single-pass, increment only</td>
+</tr>
+<tr>
+<td>Output iterator</td>
+<td style="text-align:left">Write, but not read; single-pass, increment only</td>
+</tr>
+<tr>
+<td>Forward iterator</td>
+<td style="text-align:left">Read and write; multi-pass, increment only</td>
+</tr>
+<tr>
+<td>Bidirectional iterator</td>
+<td style="text-align:left">Read and write; multi-pass, increment and decrement</td>
+</tr>
+<tr>
+<td>Random-acess iterator</td>
+<td style="text-align:left">Read and write; multi-pass, full iterator arithmetic</td>
+</tr>
+</tbody>
+</table>
+<h3 id="algorithm-parameter-patterns">Algorithm parameter patterns</h3>
+<p>Most of the algorithms have one of the following forms</p>
+<pre><code class="language-c++"><div>alg(beg, end, other args);
+alg(beg, end, dest, other args);
+alg(beg, end, beg2, other args);
+alg(beg, end, beg2, end2, other args);
+</div></code></pre>
+<h3 id="algorithm-naming-conventions">Algorithm naming conventions</h3>
+<ul>
+<li>Some algorithms use overloading to pass a predicate, e.g. <code>sort()</code>.</li>
+<li>Some algorithms have a second named version with <code>_if</code> suffix to accept predicate, e.g. <code>find(beg, end, val)</code> v.s. <code>find_if(beg, end, predicate)</code>.</li>
+<li>Some algorithms have a version with <code>_copy</code> suffix. By default, algorithms manipulate containers in-place. Those with <code>_copy</code> suffix copy results to a new container. e.g. <code>reverse(beg, end)</code> v.s. <code>reverse_copy(beg, end, dest)</code>.</li>
+</ul>
+<h2 id="container-specific-algorithms">Container-specific algorithms</h2>
+<p>Unlike other containers, <code>list</code> and <code>forward_list</code> define several algorithms as members. Because these two containers do not support random access. Some generic algorithm depends on random access.</p>
+<pre><code class="language-c++"><div>lst.sort();
+lst.unique();
+lst.reverse();
+<span class="hljs-comment">// ...</span>
+</div></code></pre>
+<h3 id="the-splice-members">The <code>splice</code> members</h3>
+<p>Lists use <code>splice</code> to insert.</p>
+<pre><code class="language-c++"><div>lst.splice(p,lst2); <span class="hljs-comment">// Move elements from lst2 to lst before p. Elements in lst2 are removed.</span>
+</div></code></pre>
+<h3 id="list-specific-operations-change-the-containers">List-specific operations change the containers</h3>
+<p>Unlike generic algorithms, list-spcific operations change the elements in containers. For example, <code>merge</code> or <code>splice</code>, move elements from on list to another and delete elements in the source container.</p>
+
+    </body>
+    </html>

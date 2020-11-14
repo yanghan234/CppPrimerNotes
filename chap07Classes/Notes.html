@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Classes</title>
+        <style>
+</style>
+        
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item { list-style-type: none; } .task-list-item-checkbox { margin-left: -20px; vertical-align: middle; }
+</style>
+        
+        
+        
+    </head>
+    <body class="vscode-light">
+        <ul>
+<li><a href="#classes">Classes</a>
+<ul>
+<li><a href="#defining-abstract-data-types">Defining abstract data types</a>
+<ul>
+<li><a href="#this-pointer"><code>this</code> pointer</a></li>
+<li><a href="#const-member-function"><code>const</code> member function</a></li>
+<li><a href="#class-scope">Class scope</a></li>
+<li><a href="#definition-of-member-function">Definition of member function</a></li>
+<li><a href="#return-this-object">Return <code>this</code> object</a></li>
+<li><a href="#define-class-related-nonmember-function">Define class-related nonmember function</a></li>
+<li><a href="#constructors">Constructors</a></li>
+</ul>
+</li>
+<li><a href="#access-control-and-encapsulation">Access control and encapsulation</a>
+<ul>
+<li><a href="#class-vs-struct-keywords"><code>class</code> vs <code>struct</code> keywords</a></li>
+<li><a href="#friend-classes-and-functions"><code>friend</code> classes and functions</a></li>
+</ul>
+</li>
+<li><a href="#additional-class-features">Additional class features</a>
+<ul>
+<li><a href="#type-member-of-class">Type member of class</a></li>
+<li><a href="#inline-member-functions"><code>inline</code> member functions</a></li>
+<li><a href="#in-class-initializer">In-class initializer</a></li>
+<li><a href="#returning-this-from-a-const-member-function">Returning <code>*this</code> from a <code>const</code> member function</a></li>
+<li><a href="#class-types">Class types</a></li>
+<li><a href="#revisit-friendships">Revisit friendships</a></li>
+</ul>
+</li>
+<li><a href="#class-scope-1">Class scope</a>
+<ul>
+<li><a href="#name-loopup">Name loopup</a></li>
+</ul>
+</li>
+<li><a href="#revisit-constructors">Revisit constructors</a>
+<ul>
+<li><a href="#initializer-list">Initializer list</a></li>
+<li><a href="#order-of-member-initialization">Order of member initialization</a></li>
+<li><a href="#delegating-constructors">Delegating constructors</a></li>
+<li><a href="#using-default-constructor">Using default constructor</a></li>
+<li><a href="#implicit-class-type-conversions">Implicit class type conversions</a></li>
+<li><a href="#aggregate-classes">Aggregate classes</a></li>
+<li><a href="#literal-classes">Literal classes</a></li>
+</ul>
+</li>
+<li><a href="#static-class-members"><code>static</code> class members</a>
+<ul>
+<li><a href="#declaration">Declaration</a></li>
+<li><a href="#usage">Usage</a></li>
+<li><a href="#definition">Definition</a></li>
+<li><a href="#initializing-static-member-variables">Initializing <code>static</code> member variables</a></li>
+<li><a href="#static-members-can-be-used-in-ways-ordinary-members-cant"><code>static</code> members can be used in ways ordinary members can't</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="classes">Classes</h1>
+<h2 id="defining-abstract-data-types">Defining abstract data types</h2>
+<p>In C++, one can use either <code>construct</code> or <code>class</code> keywords to define classes. The difference is, <code>construct</code> members have public access while <code>class</code> members have private access, by default.</p>
+<h3 id="this-pointer"><code>this</code> pointer</h3>
+<p>Each object of a class implicitly contains a <code>this</code> pointer, which points to the beginning address of the object itself, see <a href="./snippet01.cpp">snippet01</a>.</p>
+<pre><code class="language-c++"><div><span class="hljs-comment">// snippet01.cpp</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Book</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        Book() { <span class="hljs-built_in">cout</span> &lt;&lt; <span class="hljs-keyword">this</span> &lt;&lt; <span class="hljs-built_in">endl</span>; }
+        ~Book(){};
+};
+
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span>
+</span>{
+    Book b; <span class="hljs-comment">// print this pointer in constructor</span>
+    <span class="hljs-built_in">cout</span> &lt;&lt; &amp;b &lt;&lt; <span class="hljs-built_in">endl</span>; <span class="hljs-comment">// print initial address of the object</span>
+    <span class="hljs-comment">// two addresses printed above are the same.</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}
+</div></code></pre>
+<p><code>this</code> pointer has the type of <code>class_type *const</code>, i.e. <code>this</code> can not point to another object but <code>this</code> can be used to modify the object.</p>
+<h3 id="const-member-function"><code>const</code> member function</h3>
+<p>We put a <code>const</code> modifier after parameter list if we don't want the member function to modify class data. Each member function in the class implicitly contains <code>this</code> pointer as a parameter and <code>this</code> function can be used to modify data in the object. So, the <code>const</code> modifier after parameter list is used to change the type of <code>this</code> from <code>class_type *const</code> to <code>const class_type *const</code>, so that <code>this</code> pointer can not change data in the object.
+<strong>Exception</strong>: If a variable in the object is <code>mutable</code>, <code>const</code> member function can still change these data</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function">return_type <span class="hljs-title">func</span><span class="hljs-params">(parameter_list)</span> <span class="hljs-keyword">const</span></span>;
+    <span class="hljs-keyword">private</span>:
+        <span class="hljs-keyword">int</span> a; <span class="hljs-comment">// func cannot modify a, because it is const</span>
+        <span class="hljs-keyword">mutable</span> <span class="hljs-keyword">int</span> b; <span class="hljs-comment">// func can still modify b, as b is mutable</span>
+}
+</div></code></pre>
+<h3 id="class-scope">Class scope</h3>
+<p>For member functions and varaibles defined in a class, they can access each other and their orders of declarations in the class are not important.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">func1</span><span class="hljs-params">()</span></span>{func2();}; <span class="hljs-comment">// ok, func1 can call func2, even though func2 is declared after func1()</span>
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">func2</span><span class="hljs-params">()</span></span>{};
+}
+</div></code></pre>
+<h3 id="definition-of-member-function">Definition of member function</h3>
+<p>Typically, we put only declaration of member functions in class, and write the function body out of class.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-keyword">public</span> :
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">func</span><span class="hljs-params">()</span></span>; <span class="hljs-comment">// declaration</span>
+}
+
+<span class="hljs-keyword">void</span> Type::func()
+{
+    <span class="hljs-comment">// definition</span>
+}
+</div></code></pre>
+<h3 id="return-this-object">Return <code>this</code> object</h3>
+<p>This is very useful when we overload compound operators or intend to call member functions consecutively.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-keyword">public</span>: 
+        Type &amp;<span class="hljs-keyword">operator</span>+=(<span class="hljs-keyword">const</span> Type&amp; that)
+        {
+            <span class="hljs-keyword">return</span> *<span class="hljs-keyword">this</span>; <span class="hljs-comment">// return reference to current object </span>
+        }
+};
+</div></code></pre>
+<p>See <a href="snippet02.cpp">snippet02</a>.</p>
+<h3 id="define-class-related-nonmember-function">Define class-related nonmember function</h3>
+<p>We sometimes need funcitons to handle objects of certain classes. It is recommended to define these functions within the same header file of the class. A useful example is overloading of <code>&lt;&lt;</code> operator of a class.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-keyword">friend</span> ostream &amp;<span class="hljs-keyword">operator</span>&lt;&lt;(ostream &amp;, <span class="hljs-keyword">const</span> Type &amp;);
+};
+
+<span class="hljs-comment">// definition</span>
+ostream &amp;<span class="hljs-keyword">operator</span>&lt;&lt;(ostream &amp;os, <span class="hljs-keyword">const</span> Type &amp;me)
+{
+    <span class="hljs-comment">// print something to os</span>
+    <span class="hljs-comment">// ...</span>
+    <span class="hljs-keyword">return</span> os;
+}
+</div></code></pre>
+<p>See <a href="./snippet02.cpp">snippet02</a>.</p>
+<h3 id="constructors">Constructors</h3>
+<p>Basics of constructors</p>
+<ol>
+<li>Constructors initialize objects of class.</li>
+<li>Constructors have no return type.</li>
+<li>Constructors can be overloaded.</li>
+<li>Constructors can not be <code>const</code>, otherwise how can they initialize variables?</li>
+<li>If one creates a <code>const</code> object of a class, the object is <code>const</code> after constructor finished initialization.</li>
+<li>If a class has no user-defined constructor, compiler will writes a default constructor, known as <strong>synthesized default constructor</strong>, that take no input. Synthesized default constructor initializes primitive types with default values and initializes user-defined types with their default constructor. <strong>If at least one user-defined constructor is given, the compiler will no longer generate synthesized defulat constructor</strong>.</li>
+<li><code>=default</code> explicitly asks the compiler to generate a default constructor.</li>
+</ol>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        Type()=<span class="hljs-keyword">default</span>; <span class="hljs-comment">// compiler generated default constructor</span>
+};
+</div></code></pre>
+<ol start="8">
+<li>Initializing list</li>
+</ol>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        Type()=<span class="hljs-keyword">default</span>;
+        Type(<span class="hljs-keyword">int</span> i, <span class="hljs-keyword">int</span> j) : _i(i), _j(j) {}; <span class="hljs-comment">// _i(i), _j(j) is initializing list</span>
+    <span class="hljs-keyword">private</span>:
+        <span class="hljs-keyword">int</span> _i, _j;
+};
+</div></code></pre>
+<ol start="9">
+<li>Copy, assignment and destruction:</li>
+</ol>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        Type()=<span class="hljs-keyword">default</span>; <span class="hljs-comment">// default constructor</span>
+        Type(<span class="hljs-keyword">const</span> Type &amp;); <span class="hljs-comment">// copy constructor</span>
+};
+</div></code></pre>
+<h2 id="access-control-and-encapsulation">Access control and encapsulation</h2>
+<ul>
+<li>public members: accessible out of the class</li>
+<li>protected members: accessible to inheritance class</li>
+<li>private members: only accessible to class itself and <code>friend</code> functions and classes</li>
+</ul>
+<h3 id="class-vs-struct-keywords"><code>class</code> vs <code>struct</code> keywords</h3>
+<p>Classes defined with <code>class</code> and <code>struct</code> keywords have private access level and public access level by default, respectively.</p>
+<h3 id="friend-classes-and-functions"><code>friend</code> classes and functions</h3>
+<p><code>friend</code> classes and functions can access private members of a funciton. They should be declared within a class, but they are not class members. <strong>It is recommeded to group <code>friend</code> classes and functions at the beginning or end of class definition.</strong></p>
+<h2 id="additional-class-features">Additional class features</h2>
+<h3 id="type-member-of-class">Type member of class</h3>
+<p>Classes can define local names/alias for types. Definitions of alias must appear before it is fisrt used.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Screen</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-keyword">typedef</span> <span class="hljs-built_in">std</span>::<span class="hljs-built_in">string</span>::size_type pos;
+        <span class="hljs-comment">// or</span>
+        <span class="hljs-keyword">using</span> pos = <span class="hljs-built_in">std</span>::<span class="hljs-built_in">string</span>::size_type;
+        
+    <span class="hljs-keyword">private</span>:
+        <span class="hljs-comment">// First usage</span>
+        pos cursor = <span class="hljs-number">0</span>;
+
+};
+</div></code></pre>
+<h3 id="inline-member-functions"><code>inline</code> member functions</h3>
+<p>Member functions defined inside the class are automatically <code>inline</code>, if possible. For functions defined outside of class, we need put <code>inline</code> keyword at declaration or definition.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">getVal</span><span class="hljs-params">()</span> </span>{ <span class="hljs-keyword">return</span> _val;} <span class="hljs-comment">// implicitly inline</span>
+        <span class="hljs-function"><span class="hljs-keyword">inline</span> <span class="hljs-keyword">void</span> <span class="hljs-title">getVal2</span><span class="hljs-params">()</span></span>;
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">getVal3</span><span class="hljs-params">()</span></span>;
+    <span class="hljs-keyword">private</span>:
+        <span class="hljs-keyword">int</span> _val;
+};
+<span class="hljs-keyword">void</span> Type::getVal2() { <span class="hljs-keyword">return</span> _val; } <span class="hljs-comment">// no inline needed here</span>
+<span class="hljs-keyword">inline</span> <span class="hljs-keyword">void</span> Type::getVal3() { <span class="hljs-keyword">return</span> _val; } <span class="hljs-comment">// inline was not present at declaration</span>
+</div></code></pre>
+<h3 id="in-class-initializer">In-class initializer</h3>
+<p>From C++ 11, in-class initializers are allowed. For there variables, it is not necessary for constructors to initialize them, because they have default values already.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-keyword">private</span>:
+        <span class="hljs-keyword">int</span> a = <span class="hljs-number">0</span>; <span class="hljs-comment">// in-class initializer</span>
+};
+</div></code></pre>
+<h3 id="returning-this-from-a-const-member-function">Returning <code>*this</code> from a <code>const</code> member function</h3>
+<p>Recall that, in a <code>const</code> member function, <code>this</code> pointer has the type of <code>const class_name *const</code>. If a <code>const</code> function returns <code>*this</code>, the return type has to be <code>const class_name &amp;</code>. As a result, if we embed the result with another non<code>const</code> function, the compiler will complain. Here is an example,</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">const</span> Type &amp;<span class="hljs-title">func</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span></span>;
+        <span class="hljs-function">Type&amp; <span class="hljs-title">func</span><span class="hljs-params">()</span></span>; <span class="hljs-comment">// overloading</span>
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">func2</span><span class="hljs-params">()</span></span>; <span class="hljs-comment">// nonconst, modify something </span>
+};
+
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">( )</span>
+</span>{
+    Type t;
+    t.func(); <span class="hljs-comment">// call first definition</span>
+    t.func().func2(); <span class="hljs-comment">// call second definition of func(), which returns nonconst reference</span>
+}
+</div></code></pre>
+<p>The way out is to overload the <code>const</code> member function with a non<code>const</code> version, see the code block above. When embeded in consecutive calls, the compiler will match the non<code>const</code> version.</p>
+<h3 id="class-types">Class types</h3>
+<ul>
+<li>Classes with exactly the same members but with different names are different types.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-comment">/*
+ * Class A and B defined below are seen as completely different types,
+ * and thus should not be converted to each other.
+ */</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">A</span>
+{</span>
+    <span class="hljs-keyword">int</span> a;
+    <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">func</span><span class="hljs-params">()</span></span>;
+};
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">B</span>
+{</span>
+    <span class="hljs-keyword">int</span> a;
+    <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">func</span><span class="hljs-params">()</span></span>;
+}
+</div></code></pre>
+<ul>
+<li>Classes are also allowed to be declared in advance and defined later. This is known as <strong>forward declaration</strong>. With forward declaration, one can use pointers and references to this class, but cannot instatiate the class before completely define this class.</li>
+</ul>
+<h3 id="revisit-friendships">Revisit friendships</h3>
+<ul>
+<li>Friend functions and classes can access private members.</li>
+<li>Friend functions defined within the body of a class is seen as <code>inline</code>, if possible.</li>
+<li>Friend functions declared in class are <strong>not</strong> really declared yet. If functions in class want to call friend functions, the friend functions must be declared outside of class.</li>
+</ul>
+<h2 id="class-scope-1">Class scope</h2>
+<p>Every class defines its own new scope. Outside the class scope, variables and functions members can be accessed only through an object, a pointer or a reference. Type members in classes can be accessed using scope operator (<code>::</code>).</p>
+<h3 id="name-loopup">Name loopup</h3>
+<ul>
+<li>Functions and variables: Compiler firstly process ALL function declarations and then process body definitions of functions. This indicates that, the order of declaration in the class is not import. Functions can call functions declared later in the same class.</li>
+<li>Type member: When compiler processes declaration of functions or variable, the types of them must be already known. Thus, type members must be declared before they are fisrt used.</li>
+<li>Name loopup process:
+<ol>
+<li>First, look for a name inside the member function;</li>
+<li>Second, look for a name within the same class;</li>
+<li>Third, out of the class, look for names <strong>BEFORE</strong> current class;</li>
+<li>A name is not found --&gt; Compilation error.</li>
+</ol>
+</li>
+</ul>
+<h2 id="revisit-constructors">Revisit constructors</h2>
+<h3 id="initializer-list">Initializer list</h3>
+<p>When write a constructor, we can assign values to members in constructor body or use initializer list, for example,</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        Type()=<span class="hljs-keyword">default</span>;
+        <span class="hljs-comment">// using assignment</span>
+        Type(<span class="hljs-keyword">int</span> a, <span class="hljs-keyword">int</span> b)
+        {
+            <span class="hljs-comment">// give default values to member variables</span>
+            _a = a;
+            _b = b;
+        }
+        <span class="hljs-comment">// using initializer list</span>
+        Type(<span class="hljs-keyword">int</span> a, <span class="hljs-keyword">int</span> b) : _a(a), _b(b){}
+    <span class="hljs-keyword">private</span>:
+        <span class="hljs-keyword">int</span> _a;
+        <span class="hljs-keyword">int</span> _b;
+};
+</div></code></pre>
+<p>However, if a class has variables that are references or objects of classes without default constructors, assignments are not equivalent to initializer list. When the body of a constructor starts to execute, the object is already in memory. If the class contains references, an error occurs because the object is created in memory but the reference has not referred to any object. To solve this issue, we must initialize references in initializer list, which is executed before the class object is ever created in memory.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        Type(<span class="hljs-keyword">int</span> a)
+        {
+            <span class="hljs-comment">// error</span>
+            <span class="hljs-comment">// when entering constructor, </span>
+            <span class="hljs-comment">// the object is already created,</span>
+            <span class="hljs-comment">// but _r does not refer to any thing</span>
+            _a = a;
+            _r = a;
+        }
+        Type(<span class="hljs-keyword">int</span> a) : _a(a), _r(a) {} <span class="hljs-comment">// legal, initializer list executes before object is created</span>
+    <span class="hljs-keyword">private</span>:
+        <span class="hljs-keyword">int</span> _a;
+        <span class="hljs-keyword">int</span> &amp;_r;
+};
+</div></code></pre>
+<h3 id="order-of-member-initialization">Order of member initialization</h3>
+<p>Variables are initialized according to the order of declaration. It is recommended to write the initializer in the same order of declaration</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-comment">// error, rem initilizes first as it appears before base in the declaration list</span>
+        <span class="hljs-comment">// To solve this issue, just reorder base and rem below.</span>
+        Type(<span class="hljs-keyword">int</span> i, <span class="hljs-keyword">int</span> j) : base(i), rem(base%j) {} 
+    <span class="hljs-keyword">private</span>:
+        <span class="hljs-keyword">int</span> rem;
+        <span class="hljs-keyword">int</span> base; 
+};
+</div></code></pre>
+<h3 id="delegating-constructors">Delegating constructors</h3>
+<p>From C++ 11, a constructor is allowed to call another constructor. The former is called a delegating constructor.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        Type(<span class="hljs-keyword">int</span> i, <span class="hljs-keyword">int</span> j) : _i(i), _j(j){}
+        Type(<span class="hljs-keyword">int</span> i) : Type(i,<span class="hljs-number">0</span>){}
+    <span class="hljs-keyword">private</span>:
+        <span class="hljs-keyword">int</span> _i;
+        <span class="hljs-keyword">int</span> _j;
+};
+</div></code></pre>
+<h3 id="using-default-constructor">Using default constructor</h3>
+<p>It is a common mistake when one tries to use default constructor,</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-comment">// class body</span>
+};
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-function">Type <span class="hljs-title">a</span><span class="hljs-params">()</span></span>; <span class="hljs-comment">// ok, but it defines a function, named a, with no input parameters and return type is Type.</span>
+    Type b; <span class="hljs-comment">// using default constructor</span>
+}
+</div></code></pre>
+<h3 id="implicit-class-type-conversions">Implicit class type conversions</h3>
+<p>If a class has single-parameter constructors, this class allows implicit type conversion from the types of single-parameter constructors to the class type.
+As an example,</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        Type(<span class="hljs-keyword">int</span> i) : _i(i), _s(<span class="hljs-string">""</span>) { }
+        Type(<span class="hljs-built_in">string</span> s) : _i(<span class="hljs-number">0</span>), _s(s) { } 
+    <span class="hljs-keyword">private</span>:
+        <span class="hljs-keyword">int</span> _i;
+        <span class="hljs-built_in">string</span> _s;
+};
+<span class="hljs-function">Type <span class="hljs-title">func1</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>; <span class="hljs-comment">// legal, a temperary object of class Type will be created and returned.</span>
+}
+<span class="hljs-function">Type <span class="hljs-title">func2</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-built_in">string</span> s = <span class="hljs-string">"123"</span>;
+    <span class="hljs-keyword">return</span> s; <span class="hljs-comment">// legal, a temperary object of class Type will be created and returned.</span>
+}
+<span class="hljs-function">Type <span class="hljs-title">func3</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-keyword">return</span> <span class="hljs-string">"123"</span>; <span class="hljs-comment">// illegal, literal "123" needs to be converted to string and then a Type object can be created. </span>
+                  <span class="hljs-comment">// This requires two-step conversion, which is illegal.</span>
+}
+</div></code></pre>
+<p>Implicit type conversion can be suppressed, if an <code>explicit</code> modifier is put before single-parameter constructor. But, the side effect is that, assignment form initialization is also suppressed.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">explicit</span> <span class="hljs-title">Type</span><span class="hljs-params">(<span class="hljs-keyword">int</span> i)</span> : _<span class="hljs-title">i</span><span class="hljs-params">(i)</span> </span>{}
+    <span class="hljs-keyword">private</span>:
+        <span class="hljs-keyword">int</span> _i;
+};
+<span class="hljs-function">Type <span class="hljs-title">func</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-function">Type <span class="hljs-title">t1</span><span class="hljs-params">(<span class="hljs-number">123</span>)</span></span>;  <span class="hljs-comment">// ok, explicitly call the constructor</span>
+    Type t2 = <span class="hljs-number">123</span>; <span class="hljs-comment">// error, assignment form is suppressed due to explicit keyword</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;      <span class="hljs-comment">// error, implicit conversion is suppressed</span>
+    <span class="hljs-keyword">return</span> t1;     <span class="hljs-comment">// ok, explicitly return Type object</span>
+}
+</div></code></pre>
+<h3 id="aggregate-classes">Aggregate classes</h3>
+<p>An aggregate class gives users direct access to its members and has special initialization syntax. A class is aggregate if</p>
+<ul>
+<li>All data members are <code>public</code></li>
+<li>It does not define any constructors</li>
+<li>It has no in-class initializers</li>
+<li>It has not base classes or virtual functions</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Data</span> {</span>
+    <span class="hljs-keyword">int</span> val;
+    <span class="hljs-built_in">string</span> s;
+};
+
+Data d1 = { <span class="hljs-number">0</span>, <span class="hljs-string">"1234"</span> }; <span class="hljs-comment">// initializing</span>
+</div></code></pre>
+<h3 id="literal-classes">Literal classes</h3>
+<p>Did not understand this part.
+I have to review <code>constexpr</code> statement before coming back.</p>
+<h2 id="static-class-members"><code>static</code> class members</h2>
+<h3 id="declaration">Declaration</h3>
+<p><code>static</code> members are independent of any objects of the class, thus <code>static</code> function does not have an implicit <code>this</code> argument and <code>static</code> function cannot use <code>this</code> pointer in function body. As a result, <code>static</code> member function cannot be declared as <code>const</code>, because <code>const</code> applies constraint on <code>this</code> pointer.</p>
+<h3 id="usage">Usage</h3>
+<ul>
+<li>Use class name and scope operator</li>
+<li>Use object</li>
+</ul>
+<h3 id="definition">Definition</h3>
+<ul>
+<li>There is no need to rewrite <code>static</code> keyword if a <code>static</code> function is defined out of class.</li>
+<li><code>static</code> function cannot accesss non<code>static</code> member variables or functions in the class, because when the <code>static function</code> is called, there might be no object of the class created.</li>
+<li><code>static</code> members are created before any object of the class is created. They exist until the program fully completes.</li>
+</ul>
+<h3 id="initializing-static-member-variables">Initializing <code>static</code> member variables</h3>
+<ol>
+<li>Ordinary <code>static</code> member variables can not be initialized in-class. Instead, they need to be initialized out of the class body.</li>
+</ol>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-keyword">private</span>:
+        <span class="hljs-keyword">static</span> <span class="hljs-keyword">int</span> TypeVal; <span class="hljs-comment">// by default, it is zero</span>
+};
+
+Type::TypeVal = <span class="hljs-number">1</span>; <span class="hljs-comment">// initializing</span>
+</div></code></pre>
+<ol start="2">
+<li><code>static</code> members that are <code>constexpr</code> can be initialized within the class body,</li>
+</ol>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-keyword">private</span>:
+        <span class="hljs-keyword">static</span> <span class="hljs-keyword">constexpr</span> <span class="hljs-keyword">int</span> TypeVal = <span class="hljs-number">123</span>; <span class="hljs-comment">// ok, in-class initialization for constexpr</span>
+};
+</div></code></pre>
+<h3 id="static-members-can-be-used-in-ways-ordinary-members-cant"><code>static</code> members can be used in ways ordinary members can't</h3>
+<ol>
+<li>A <code>static</code> data can have the same type as the class type of which it is a member.</li>
+</ol>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-keyword">private</span>:
+        <span class="hljs-keyword">static</span> Type t; <span class="hljs-comment">// ok for static</span>
+};
+</div></code></pre>
+<ol start="2">
+<li><code>static</code> members can be used as default arguments</li>
+</ol>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Type</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function">Type&amp; <span class="hljs-title">func</span><span class="hljs-params">( <span class="hljs-keyword">int</span> i = TypeVal)</span></span>;
+    <span class="hljs-keyword">private</span>:
+        <span class="hljs-keyword">static</span> <span class="hljs-keyword">int</span> TypeVal;
+}
+</div></code></pre>
+
+    </body>
+    </html>

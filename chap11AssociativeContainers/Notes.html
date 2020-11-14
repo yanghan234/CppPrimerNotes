@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Associative containers</title>
+        <style>
+</style>
+        
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item { list-style-type: none; } .task-list-item-checkbox { margin-left: -20px; vertical-align: middle; }
+</style>
+        
+        
+        
+    </head>
+    <body class="vscode-light">
+        <ul>
+<li><a href="#associative-containers">Associative containers</a>
+<ul>
+<li><a href="#using-an-associative-container">Using an associative container</a>
+<ul>
+<li><a href="#using-a-map">Using a map</a></li>
+<li><a href="#using-a-set">Using a set</a></li>
+</ul>
+</li>
+<li><a href="#overview-of-the-associative-containers">Overview of the associative containers</a>
+<ul>
+<li><a href="#initialize-an-associative-container">Initialize an associative container</a></li>
+<li><a href="#requirements-on-key-type">Requirements on key type</a></li>
+<li><a href="#the-pair-type">The <code>pair</code> type</a></li>
+</ul>
+</li>
+<li><a href="#operations-on-associative-containers">Operations on associative containers</a>
+<ul>
+<li><a href="#type-alias">Type alias</a></li>
+<li><a href="#associative-container-iterators">Associative container iterators</a></li>
+<li><a href="#adding-elements">Adding elements</a></li>
+<li><a href="#erasing-elements">Erasing elements</a></li>
+<li><a href="#subscripting-a-map">Subscripting a <code>map</code></a></li>
+<li><a href="#accessing-elements">Accessing elements</a></li>
+</ul>
+</li>
+<li><a href="#the-unordered-containers">The unordered containers</a></li>
+</ul>
+</li>
+</ul>
+<h1 id="associative-containers">Associative containers</h1>
+<p>Associative containers support efficient loopup and retrieval by a key. The two primary associative containers are <code>set</code> and <code>map</code>.</p>
+<ul>
+<li>Elements ordered by key:
+<ol>
+<li><code>map</code>: associative array; holds key-value pair;</li>
+<li><code>set</code>: container in which the key is the value</li>
+<li><code>multimap</code>: <code>map</code> in which a key can appear multiple times</li>
+<li><code>multiset</code>: <code>set</code> in which a key can appear multiple times</li>
+</ol>
+</li>
+<li>Unordered collections:
+<ol>
+<li><code>unordered_map</code>: <code>map</code> organized by a hash function</li>
+<li><code>unordered_set</code>: <code>set</code> organized by a hash function</li>
+<li><code>unordered_multimap</code>: hashed <code>map</code>; keys can appear multiple times</li>
+<li><code>unordered_multiset</code>: hashed <code>set</code>; keys can appear multiple times</li>
+</ol>
+</li>
+</ul>
+<h2 id="using-an-associative-container">Using an associative container</h2>
+<h3 id="using-a-map">Using a map</h3>
+<pre><code class="language-c++"><div><span class="hljs-built_in">map</span>&lt;<span class="hljs-built_in">string</span>,<span class="hljs-keyword">int</span>&gt; m;
+m[key]++; <span class="hljs-comment">// use keys as subscript</span>
+
+<span class="hljs-comment">// map contains a data structure named pair</span>
+<span class="hljs-comment">// pair has two public data elements, first -&gt; key, second -&gt; val.</span>
+<span class="hljs-keyword">for</span> ( <span class="hljs-keyword">const</span> <span class="hljs-keyword">auto</span> &amp;p: m )
+    p.first;
+    p.second;
+</div></code></pre>
+<h3 id="using-a-set">Using a set</h3>
+<pre><code class="language-c++"><div><span class="hljs-built_in">set</span>&lt;<span class="hljs-built_in">string</span>&gt; s;
+s.find(key) == s.end(); <span class="hljs-comment">// true, if not found</span>
+</div></code></pre>
+<h2 id="overview-of-the-associative-containers">Overview of the associative containers</h2>
+<p>Associative containers do not support sequential-container position-specific operations, such as <code>push_back</code> or <code>back</code>.</p>
+<h3 id="initialize-an-associative-container">Initialize an associative container</h3>
+<ul>
+<li>Using initializer list<pre><code class="language-c++"><div><span class="hljs-built_in">set</span>&lt;<span class="hljs-built_in">string</span>&gt; s = {<span class="hljs-string">"123"</span>,<span class="hljs-string">"124"</span>};
+<span class="hljs-built_in">map</span>&lt;<span class="hljs-built_in">string</span>,<span class="hljs-keyword">int</span>&gt; m = { { <span class="hljs-string">"123"</span>, <span class="hljs-number">123</span> },
+                      { <span class="hljs-string">"125"</span>, <span class="hljs-number">12</span> } };
+</div></code></pre>
+</li>
+<li>Initialize from a sequential container<pre><code class="language-c++"><div><span class="hljs-built_in">vector</span>&lt;<span class="hljs-built_in">string</span>&gt; svec;
+<span class="hljs-comment">// ...</span>
+<span class="hljs-built_in">set</span>&lt;<span class="hljs-built_in">string</span>&gt; s1(svec.begin(),svec.end());
+</div></code></pre>
+</li>
+</ul>
+<h3 id="requirements-on-key-type">Requirements on key type</h3>
+<p>For ordered containers, the key type must be comparable, i.e. they must support &lt; operator.</p>
+<p>We can use a comparison function for the key type when define a container.</p>
+<pre><code class="language-c++"><div><span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">compare</span><span class="hljs-params">(<span class="hljs-keyword">const</span> <span class="hljs-built_in">string</span> &amp;s1, <span class="hljs-keyword">const</span> <span class="hljs-built_in">string</span> &amp;s2)</span>
+</span>{
+    <span class="hljs-keyword">return</span> s1.size() &lt; s2.size();
+}
+<span class="hljs-built_in">set</span>&lt;<span class="hljs-built_in">string</span>,<span class="hljs-keyword">decltype</span>(compare)*&gt; s1(compare);
+</div></code></pre>
+<h3 id="the-pair-type">The <code>pair</code> type</h3>
+<p>A <code>pair</code> holds two data members.</p>
+<pre><code class="language-c++"><div>pair&lt;<span class="hljs-built_in">string</span>, <span class="hljs-built_in">string</span>&gt; anon; <span class="hljs-comment">// holds two strings</span>
+pair&lt;<span class="hljs-built_in">string</span>, <span class="hljs-keyword">size_t</span>&gt; word_count; <span class="hljs-comment">// holds a string and a size_t</span>
+pair&lt;<span class="hljs-built_in">string</span>, <span class="hljs-built_in">vector</span>&lt;<span class="hljs-built_in">string</span>&gt;&gt; line; <span class="hljs-comment">// holds string and vector&lt;int&gt;</span>
+
+<span class="hljs-comment">// In general </span>
+pair&lt;T1,T2&gt; p;
+pair&lt;T1,T2&gt; p(v1,v2);
+pair&lt;T1,T2&gt; p = {v1,v2};
+<span class="hljs-keyword">auto</span> p = make_pair(v1,v2); <span class="hljs-comment">// type is inferred from arguments </span>
+</div></code></pre>
+<h2 id="operations-on-associative-containers">Operations on associative containers</h2>
+<h3 id="type-alias">Type alias</h3>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>key_type</code></td>
+<td style="text-align:left">Type of key for this container</td>
+</tr>
+<tr>
+<td><code>mapped_type</code></td>
+<td style="text-align:left">Type associated with each key; <code>map</code> type only</td>
+</tr>
+<tr>
+<td><code>value_type</code></td>
+<td style="text-align:left">For <code>set</code>s, the same as <code>key_type</code>; for maps, <code>pair&lt;const key_type,mapped_type&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="associative-container-iterators">Associative container iterators</h3>
+<p>When we dereference an iterator, we get a reference to a value of the container's <code>value_type</code>.</p>
+<pre><code class="language-c++"><div><span class="hljs-built_in">set</span>&lt;<span class="hljs-built_in">string</span>&gt; s;
+*(s.begin()); <span class="hljs-comment">// string</span>
+<span class="hljs-built_in">map</span>&lt;<span class="hljs-built_in">string</span>,<span class="hljs-keyword">int</span>&gt; m;
+*(m.begin()); <span class="hljs-comment">// pair&lt;string,int&gt;</span>
+</div></code></pre>
+<p>Notes:</p>
+<ol>
+<li>Iterators of <code>set</code>s are <code>const</code>.</li>
+<li>Iterators of sets and maps can also be used to traverse the container.</li>
+<li>We typically do not use generic algorithms on associative containers.</li>
+</ol>
+<h3 id="adding-elements">Adding elements</h3>
+<ul>
+<li>Insert to sets<pre><code class="language-c++"><div>s.insert(vec.begin(),vec.end());
+s.insert({<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>});
+</div></code></pre>
+</li>
+<li>Insert to maps<pre><code class="language-c++"><div>m.insert({key,val});
+m.insert(make_pair(key,val));
+m.insert(pair&lt;key_type,mapped_type&gt;(key,val));
+m.insert(<span class="hljs-built_in">map</span>&lt;key_type,mapped_type&gt;::value_type(key,val));
+</div></code></pre>
+</li>
+<li>Return from <code>insert</code>
+The return value contains two members. The first is the iterator of the inserted element, if successfully inserted. The second is a boolean to indicate if the element is successfully inserted.</li>
+<li>Inserting to <code>multiset</code> and <code>multimap</code> is similar</li>
+</ul>
+<h3 id="erasing-elements">Erasing elements</h3>
+<pre><code class="language-c++"><div><span class="hljs-comment">// remove key from sets or maps</span>
+s.erase(key);
+m.erase(key);
+</div></code></pre>
+<h3 id="subscripting-a-map">Subscripting a <code>map</code></h3>
+<p><code>set</code> does not support subscripting, <code>map</code> does.
+If a key does not exist in map, a new one is created.</p>
+<pre><code class="language-c++"><div><span class="hljs-built_in">map</span>&lt;<span class="hljs-built_in">string</span>,<span class="hljs-keyword">int</span>&gt; m;
+m[<span class="hljs-string">"abc"</span>] = <span class="hljs-number">1</span>; <span class="hljs-comment">// add new one</span>
+m[<span class="hljs-string">"abc"</span>] = <span class="hljs-number">2</span>; <span class="hljs-comment">// update value</span>
+<span class="hljs-comment">// equivalent to m.at(key)</span>
+</div></code></pre>
+<h3 id="accessing-elements">Accessing elements</h3>
+<p>We can use <code>find</code> or <code>count</code> to check if a key exists in a <code>set</code> or <code>map</code>.</p>
+<pre><code class="language-c++"><div>s.find(key); <span class="hljs-comment">// return an iterator; found if s.find(key) != s.end()  </span>
+s.count(key); <span class="hljs-comment">// found if s.count(key) != 0;</span>
+</div></code></pre>
+<p>If we want to check if a key exists in <code>map</code>s, we should use <code>find</code> rather than subscripting. Because, subscripting may create unwanted elements in maps.</p>
+<p><strong>I skipped a lot here</strong></p>
+<h2 id="the-unordered-containers">The unordered containers</h2>
+
+    </body>
+    </html>

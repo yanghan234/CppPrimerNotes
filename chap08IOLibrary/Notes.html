@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>The IO Library</title>
+        <style>
+</style>
+        
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item { list-style-type: none; } .task-list-item-checkbox { margin-left: -20px; vertical-align: middle; }
+</style>
+        
+        
+        
+    </head>
+    <body class="vscode-light">
+        <ul>
+<li><a href="#the-io-library">The IO Library</a>
+<ul>
+<li><a href="#the-io-classes">The IO Classes</a>
+<ul>
+<li><a href="#no-copy-or-assign-for-io-objects">No copy or assign for IO objects</a></li>
+<li><a href="#condition-states">Condition states</a></li>
+<li><a href="#interogating-the-state-of-a-stream">Interogating the state of a stream</a></li>
+<li><a href="#managing-the-output-buffer">Managing the output buffer</a></li>
+<li><a href="#managing-output-buffer">Managing output buffer</a></li>
+<li><a href="#tying-input-and-output-streams">Tying input and output streams</a></li>
+</ul>
+</li>
+<li><a href="#file-input-and-output">File Input and Output</a>
+<ul>
+<li><a href="#usage">Usage</a></li>
+<li><a href="#open-and-close"><code>open</code> and <code>close</code></a></li>
+<li><a href="#file-modes">File modes</a></li>
+</ul>
+</li>
+<li><a href="#string-streams"><code>string</code> Streams</a></li>
+</ul>
+</li>
+</ul>
+<h1 id="the-io-library">The IO Library</h1>
+<h2 id="the-io-classes">The IO Classes</h2>
+<p>IO library types and headers</p>
+<table>
+<thead>
+<tr>
+<th>Header</th>
+<th style="text-align:left">Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>iostream</code></td>
+<td style="text-align:left"><code>istream</code>, <code>wistream</code> reads from a stream</td>
+</tr>
+<tr>
+<td></td>
+<td style="text-align:left"><code>ostream</code>, <code>wostream</code> writes to a stream</td>
+</tr>
+<tr>
+<td></td>
+<td style="text-align:left"><code>iostream</code>, <code>wiostream</code> reads and writes a stream</td>
+</tr>
+<tr>
+<td><code>fstream</code></td>
+<td style="text-align:left"><code>ifstream</code>, <code>wifstream</code> reads from a file stream</td>
+</tr>
+<tr>
+<td></td>
+<td style="text-align:left"><code>ofstream</code>, <code>wofstream</code> writes to a file stream</td>
+</tr>
+<tr>
+<td></td>
+<td style="text-align:left"><code>fstream</code>, <code>wfstream</code> reads and writes a file stream</td>
+</tr>
+<tr>
+<td><code>sstream</code></td>
+<td style="text-align:left"><code>istringstream</code>, <code>wistringstream</code> reads from a string</td>
+</tr>
+<tr>
+<td></td>
+<td style="text-align:left"><code>ostringstream</code>, <code>wostringstream</code> writes to a string</td>
+</tr>
+<tr>
+<td></td>
+<td style="text-align:left"><code>stringstream</code>, <code>wstringstream</code> reads and writes a string</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>w-</code>streams are intended for reading wide char (wchar_t).</p>
+<h3 id="no-copy-or-assign-for-io-objects">No copy or assign for IO objects</h3>
+<p>IO objects can not be copied or assigned to another.</p>
+<pre><code class="language-c++"><div>ostream out1, out2;
+out1 = out2;           <span class="hljs-comment">// error, no assign for IO object</span>
+<span class="hljs-function">ostream <span class="hljs-title">out3</span><span class="hljs-params">(out1)</span></span>;    <span class="hljs-comment">// error, no copy for IO object</span>
+</div></code></pre>
+<h3 id="condition-states">Condition states</h3>
+<p>IO classes define functions and flags that let us access and manipulate the condiction state of a stream. The eaist way to determine the state of a stream is to use the object as a condition.</p>
+<pre><code class="language-c++"><div><span class="hljs-comment">// while cin in good state, the body will run</span>
+<span class="hljs-keyword">while</span> ( <span class="hljs-built_in">cin</span> &gt;&gt; word )
+    <span class="hljs-comment">// do ...</span>
+</div></code></pre>
+<h3 id="interogating-the-state-of-a-stream">Interogating the state of a stream</h3>
+<p>The IO library defines a type named <code>iostate</code> that it uses to convey information about the state of a stream.</p>
+<table>
+<thead>
+<tr>
+<th>iostate</th>
+<th style="text-align:left">description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>badbit</code></td>
+<td style="text-align:left">system-level failure, e.g. unrecoverable read or write error</td>
+</tr>
+<tr>
+<td><code>failbit</code></td>
+<td style="text-align:left">recoverable error, e.g. reading a character when numeric data was expected</td>
+</tr>
+<tr>
+<td><code>eofbit</code></td>
+<td style="text-align:left">end-of-file</td>
+</tr>
+<tr>
+<td><code>goodbit</code></td>
+<td style="text-align:left">no failures on the stream</td>
+</tr>
+</tbody>
+</table>
+<p>The library also defines a set of functions to interrogate the state of these flags.</p>
+<table>
+<thead>
+<tr>
+<th>function</th>
+<th style="text-align:left">description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>s.eof()</td>
+<td style="text-align:left"><code>true</code> if <code>eofbit</code> in the stream s is set</td>
+</tr>
+<tr>
+<td>s.fail()</td>
+<td style="text-align:left"><code>true</code> if <code>failbit</code> or <code>badbit</code> in the stream s is set</td>
+</tr>
+<tr>
+<td>s.bad()</td>
+<td style="text-align:left"><code>true</code> if <code>badbit</code> in the stream s is set</td>
+</tr>
+<tr>
+<td>s.good()</td>
+<td style="text-align:left"><code>true</code> if the stream s is in a valid state</td>
+</tr>
+<tr>
+<td>s.clear()</td>
+<td style="text-align:left">Reset all condiction values in the stream s to valid state.</td>
+</tr>
+<tr>
+<td>s.clear(flags)</td>
+<td style="text-align:left">Reset the condition of s to flags. Type of flags is one of <code>iostate</code></td>
+</tr>
+<tr>
+<td>s.setstate(flags)</td>
+<td style="text-align:left">Adds specified condiction to s</td>
+</tr>
+<tr>
+<td>s.rdstate()</td>
+<td style="text-align:left">Returns current condition of s as a <code>iostate</code> value</td>
+</tr>
+</tbody>
+</table>
+<h3 id="managing-the-output-buffer">Managing the output buffer</h3>
+<p>Here is an example to use the functions above</p>
+<pre><code class="language-c++"><div><span class="hljs-keyword">auto</span> old_state = <span class="hljs-built_in">cin</span>.rdstate(); <span class="hljs-comment">// remember the current state of cin</span>
+<span class="hljs-built_in">cin</span>.clear();                    <span class="hljs-comment">// make cin valid</span>
+process_input(<span class="hljs-built_in">cin</span>);             <span class="hljs-comment">// use cin</span>
+<span class="hljs-built_in">cin</span>.setstate(old_state);        <span class="hljs-comment">// now reset cin to its old state</span>
+</div></code></pre>
+<h3 id="managing-output-buffer">Managing output buffer</h3>
+<p>Each output stream manages a buffer, which holds output data temperarily. Buffers will be flushed and write data to the output target when needed or requested.</p>
+<ul>
+<li>Flushing the output buffer:<pre><code class="language-c++"><div><span class="hljs-built_in">cout</span> &lt;&lt; <span class="hljs-string">" "</span> &lt;&lt; <span class="hljs-built_in">endl</span>;  <span class="hljs-comment">// writes string and a newline, then flushes the buffer</span>
+<span class="hljs-built_in">cout</span> &lt;&lt; <span class="hljs-string">" "</span> &lt;&lt; flush; <span class="hljs-comment">// writes string, then flushes the buffer; adds no data</span>
+<span class="hljs-built_in">cout</span> &lt;&lt; <span class="hljs-string">" "</span> &lt;&lt; ends;  <span class="hljs-comment">// writes string and a null, then flushes the buffer</span>
+</div></code></pre>
+</li>
+<li>The <code>unitbuf</code> manipulator: this manipulator tells the stream to do a flush after every subsequent write.<pre><code class="language-c++"><div><span class="hljs-built_in">cout</span> &lt;&lt; unitbuf; <span class="hljs-comment">// all writes will be flushed immediately</span>
+<span class="hljs-built_in">cout</span> &lt;&lt; nounibuf; <span class="hljs-comment">// returns to normal buffering</span>
+</div></code></pre>
+</li>
+</ul>
+<h3 id="tying-input-and-output-streams">Tying input and output streams</h3>
+<p>Sometimes, when we use one stream, we want to flush anther buffer beforehand. This pretends streams to interrupt each other. For example, <code>cout</code> is tied to <code>cin</code>, so when <code>cin</code> is used, <code>cout</code> is flushed beforehand. The tie relation can also be changed.</p>
+<pre><code class="language-c++"><div><span class="hljs-built_in">cin</span>.tie(&amp;<span class="hljs-built_in">cout</span>); <span class="hljs-comment">// illustration only, cin is already tied to cout</span>
+ostream *old_tie = <span class="hljs-built_in">cin</span>.tie(<span class="hljs-literal">nullptr</span>);
+<span class="hljs-built_in">cin</span>.tie(&amp;<span class="hljs-built_in">cerr</span>); <span class="hljs-comment">// tie cin to cerr</span>
+<span class="hljs-built_in">cin</span>.tie(old_tie); <span class="hljs-comment">// reestablish normal tie between cin and cout</span>
+</div></code></pre>
+<p>Each stream can be tied to at most one stream at a time, but multiple streams can tie themselves to the same ostream.</p>
+<h2 id="file-input-and-output">File Input and Output</h2>
+<p>The <code>fstream</code> header defines <code>ifstream</code>, <code>ofstream</code> and <code>fstream</code>, all of them can be used similar to standard IO streams.</p>
+<h3 id="usage">Usage</h3>
+<pre><code class="language-c++"><div><span class="hljs-function">ifstream <span class="hljs-title">in</span><span class="hljs-params">(file)</span></span>; <span class="hljs-comment">// construct an input file stream, file can be a c++ string or a c-like char*</span>
+</div></code></pre>
+<h3 id="open-and-close"><code>open</code> and <code>close</code></h3>
+<p>We can construct a file stream object that is not associated to any file, and open a file later. The object can be reused.</p>
+<pre><code class="language-c++"><div>ifstream inobj;       <span class="hljs-comment">// a file stream object not associated to any file</span>
+inobj.open(filename); <span class="hljs-comment">// open file</span>
+inobj.close();        <span class="hljs-comment">// close</span>
+inobj.open(filename2); <span class="hljs-comment">// open another file</span>
+</div></code></pre>
+<h3 id="file-modes">File modes</h3>
+<p>When a file stream opens a file, we have several file modes. Some of them can be used together.</p>
+<table>
+<thead>
+<tr>
+<th>File Modes</th>
+<th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>in</code></td>
+<td style="text-align:left">Open for input</td>
+</tr>
+<tr>
+<td><code>out</code></td>
+<td style="text-align:left">Open for output, implicitly <code>trunc</code></td>
+</tr>
+<tr>
+<td><code>app</code></td>
+<td style="text-align:left">Write to the end of file</td>
+</tr>
+<tr>
+<td><code>ate</code></td>
+<td style="text-align:left">Seek to the end immediately after the open</td>
+</tr>
+<tr>
+<td><code>trunc</code></td>
+<td style="text-align:left">Truncate the file</td>
+</tr>
+<tr>
+<td><code>binary</code></td>
+<td style="text-align:left">DO IO operations in binary mode</td>
+</tr>
+</tbody>
+</table>
+<h2 id="string-streams"><code>string</code> Streams</h2>
+<p>The header file <code>sstream</code> defines <code>istringstream</code>, <code>ostringstream</code> and <code>stringstream</code>, that can be used similar to standard IO streams.</p>
+
+    </body>
+    </html>
