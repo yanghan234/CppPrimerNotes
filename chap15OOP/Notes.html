@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Object-oriented programming</title>
+        <style>
+</style>
+        
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item { list-style-type: none; } .task-list-item-checkbox { margin-left: -20px; vertical-align: middle; }
+</style>
+        
+        
+        
+    </head>
+    <body class="vscode-body vscode-light">
+        <ul>
+<li><a href="#object-oriented-programming">Object-oriented programming</a>
+<ul>
+<li><a href="#overview">Overview</a>
+<ul>
+<li><a href="#inheritance">Inheritance</a></li>
+<li><a href="#dynamic-binding">Dynamic binding</a></li>
+</ul>
+</li>
+<li><a href="#define-base-and-derived-classes">Define base and derived classes</a>
+<ul>
+<li><a href="#define-a-base-class">Define a base class</a></li>
+<li><a href="#define-a-derived-class">Define a derived class</a></li>
+<li><a href="#conversions-and-inheritance">Conversions and inheritance</a></li>
+</ul>
+</li>
+<li><a href="#virtual-functions">Virtual functions</a></li>
+<li><a href="#abstract-base-classes">Abstract base classes</a></li>
+<li><a href="#access-control-and-inheritance">Access control and inheritance</a></li>
+<li><a href="#class-scope-under-inheritance">Class scope under inheritance</a></li>
+<li><a href="#constructors-and-copy-control">Constructors and copy control</a>
+<ul>
+<li><a href="#virtual-destructors">Virtual destructors</a></li>
+<li><a href="#synthesized-copy-control-and-inheritance">Synthesized copy control and inheritance</a></li>
+<li><a href="#derived-class-copy-control-members">Derived-class copy-control members</a></li>
+<li><a href="#inherited-constructors">Inherited constructors</a></li>
+</ul>
+</li>
+<li><a href="#containers-and-inheritance">Containers and inheritance</a></li>
+</ul>
+</li>
+</ul>
+<h1 id="object-oriented-programming">Object-oriented programming</h1>
+<h2 id="overview">Overview</h2>
+<p>The key ideas in object-oriented programming are</p>
+<ul>
+<li>Data abstraction: We define classes that separate interface and implementation</li>
+<li>Inheritance: We can define classes that model the relationships among similar types</li>
+<li>Dynamic binding: We can use objects of similar types while ignoring the details of how they differ.</li>
+</ul>
+<h3 id="inheritance">Inheritance</h3>
+<p>Classes related by inheritance form a hierachy, including base class and derived class. Base classes define virtual functions so that derived classes can provide their own implementation for virtual functions.</p>
+<p>A derived calss must specify the classes from which it intends to inherit.</p>
+<pre><code class="language-c++"><div><span class="hljs-comment">/*
+ * Note: derivation list should be written in definition.
+ * Forward declaration should not include derivation list.
+ */</span>
+<span class="hljs-comment">// forward declaration</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Deriv</span>;</span>
+
+<span class="hljs-comment">// definition</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Deriv</span>:</span> <span class="hljs-keyword">public</span> Base
+{
+};
+</div></code></pre>
+<h3 id="dynamic-binding">Dynamic binding</h3>
+<p>Through dynamic binding, if we call a virtual function via the pointer or reference to base class, the program will dynamically decide to call the implementation in base or derived class.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Base</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-title">Foo</span><span class="hljs-params">()</span></span>;
+};
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Deriv</span>:</span> <span class="hljs-keyword">public</span> Base
+{
+    <span class="hljs-keyword">public</span>;
+        Foo() <span class="hljs-keyword">override</span>;
+};
+
+Base *bptr1 = <span class="hljs-keyword">new</span> Base();
+bptr1-&gt;Foo(); <span class="hljs-comment">// call implementation in base class</span>
+Base *bptr2 = <span class="hljs-keyword">new</span> Deriv();
+bptr2-&gt;Foo(); <span class="hljs-comment">// call implementation in derived class</span>
+</div></code></pre>
+<p>Because the decission as to which version to run depends on the type of argument, that decision can't be made until runtime. Therefore, dynamic binding is sometimes known as <strong>run-time binding</strong>.</p>
+<h2 id="define-base-and-derived-classes">Define base and derived classes</h2>
+<h3 id="define-a-base-class">Define a base class</h3>
+<ul>
+<li>Member functions
+<ul>
+<li>If a function is expected to be override in derived class, it should be <code>virtual</code> so that the function call be dynamically bound.</li>
+<li>Any non<code>static</code> functions other than constructors can be <code>virtual</code></li>
+<li>Destructor of base function is highly recommended to be <code>virtual</code></li>
+</ul>
+</li>
+<li>Access control and inheritance
+<code>protected</code> access control is useful for a base class, as <code>protected</code> members can be accessed from derived classes but can not be accessed from outside of base/derived class.</li>
+</ul>
+<h3 id="define-a-derived-class">Define a derived class</h3>
+<p>A derived class must specify from which class(es) it inherits by providing a <strong>class derivation list</strong>.</p>
+<ul>
+<li>Virtual functions
+<ul>
+<li>Derived classes do not necessarily write <code>virtual</code>. The <code>virtual</code> functions remain <code>virtaul</code> in the whole hierachy.</li>
+<li>From C++ 11, <code>override</code> specifier can be added after parameter list to guarantee that this function does override a virtual function in base class.</li>
+</ul>
+</li>
+<li>Derived-class object and derived-to-base conversion
+<ul>
+<li>A derived-class object contains members inherited from base class and members defined by derived-class.</li>
+<li>A pointer or reference to base class can be used to point a derived class, this is known as <strong>derived-to-base</strong> conversion.</li>
+</ul>
+</li>
+<li>Derived-class constructor
+<ul>
+<li>A derived class should call base-class constructors to initialize members inherited from base class.</li>
+<li>A derived-class constructor should call base-class constructors in its initialization list.</li>
+</ul>
+<pre><code class="language-c++"><div>Derived::Derived() : Base() {}
+</div></code></pre>
+<ul>
+<li>The base class is initialized first, and then the members of the derived class are initialized in the order in which they are declared in the class.</li>
+</ul>
+</li>
+<li>Using members of base in derived: A derived class can use <code>public</code> and <code>protected</code> members of base class as if they are members of the derived class.</li>
+<li>Inheritance and <code>static</code> members: If a base class defines a <code>static</code> member, this member is shared by all classes of the hierachy.</li>
+<li>Declaration of derived classes: Forward declaration of derived classes should not include derivation list.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-comment">// forward declaration</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Derived</span> :</span> <span class="hljs-keyword">public</span> Base; <span class="hljs-comment">// error</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Derived</span>;</span> <span class="hljs-comment">// ok</span>
+</div></code></pre>
+<ul>
+<li>Classes used as a base class: <strong>Classes must be defined instead of just being declared before they can be used as base functions</strong>.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Base</span>;</span> <span class="hljs-comment">// forward declaration</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Derived</span>:</span> <span class="hljs-keyword">public</span> Base <span class="hljs-comment">// error, Base is not defined yet</span>
+{};
+
+<span class="hljs-comment">// define Base</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Base</span>
+{</span><span class="hljs-comment">//...};</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Derived</span>:</span> <span class="hljs-keyword">public</span> Base <span class="hljs-comment">// ok, Base is defined</span>
+{<span class="hljs-comment">//... };</span>
+</div></code></pre>
+<ul>
+<li>Preventing inheritance: From C++ 11, the <code>final</code> keyword can be used to prevent a class from being inherited further.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Derived</span> <span class="hljs-title">final</span>:</span> <span class="hljs-keyword">public</span> Base
+{ <span class="hljs-comment">/* ... */</span> };
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DDerived</span>:</span> <span class="hljs-keyword">public</span> Derived <span class="hljs-comment">// error, Derived is final</span>
+{ <span class="hljs-comment">/* ... */</span> };
+</div></code></pre>
+<h3 id="conversions-and-inheritance">Conversions and inheritance</h3>
+<p>We can bind a pointer (including smart pointers) or reference to a base-class type to an object of a type derived from that base class, known as <strong>derived-to-base conversion</strong>.  The implication of derived-to-base conversion is that, the actual type of a pointer or reference to base class is unknown until runtime.</p>
+<pre><code class="language-c++"><div>Base *bptr = <span class="hljs-keyword">new</span> Derived(); <span class="hljs-comment">// ok, derived-to-base conversion</span>
+Derived dobj;
+Base &amp;bref = dobj;
+</div></code></pre>
+<ul>
+<li>Static type and dynamic type: Static types are known at compile time; dynamic types are known at run time. The dynamic binding is supported via <code>virtual</code> function.</li>
+<li>No implicit conversion from base to derived.</li>
+</ul>
+<pre><code class="language-c++"><div>Base bobj;
+Derived *dptr = &amp;bobj; <span class="hljs-comment">// error</span>
+Derived &amp;dref = bobj; <span class="hljs-comment">// error</span>
+
+Derived dobj;
+Base *bptr = &amp;dobj; <span class="hljs-comment">// ok, derived-to-base conversion</span>
+Derived *dptr = bptr; <span class="hljs-comment">// error</span>
+</div></code></pre>
+<ul>
+<li>Derived-to-base conversion applies only to pointers and references, but not objects. When convering derived-class objects to base-class objects, the derived-class members in derived-class objects are lost, known as <strong>sliced down</strong>.</li>
+</ul>
+<pre><code class="language-c++"><div>Derived dobj;
+Base bobj = dobj; <span class="hljs-comment">// call copy constructor of Base, information in dobj is lost</span>
+bobj = dobj; <span class="hljs-comment">// call copy assignment operator of Base, information in dobj is lost</span>
+</div></code></pre>
+<p>Three things to remember about conversions among classes,</p>
+<ol>
+<li>The conversion from derived to base applies only to pointer or reference types.</li>
+<li>There is no implicit conversion from base class to derived class.</li>
+<li>Like any member, the derived-to-base conversion may be inaccessible due to access control.(<code>public</code> inheritance)</li>
+</ol>
+<h2 id="virtual-functions">Virtual functions</h2>
+<p>When a virtual function is called by a pointer or reference, the compiler generates code to decide at run time which function to call. If the function is called by an object, the function called is decided at compile time.</p>
+<ul>
+<li>Virtual functions in a derived class
+<ul>
+<li>Once a function is declared as <code>virtual</code>, it remains <code>virtual</code> in all the derived classes.</li>
+<li>To override a virtual function, function name, return type and parameter list type must be exactly the same.</li>
+<li>One exception is when the return type is reference or pointer to base type.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Base</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">virtual</span> Base &amp;<span class="hljs-title">func</span><span class="hljs-params">()</span></span>;
+        <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">int</span> <span class="hljs-title">func2</span><span class="hljs-params">(<span class="hljs-keyword">int</span>,<span class="hljs-keyword">double</span>,<span class="hljs-built_in">string</span>)</span></span>;
+};
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Derived</span>:</span> <span class="hljs-keyword">public</span> Base
+{
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-comment">// return reference to derived type is ok to override</span>
+        <span class="hljs-function">Derived &amp;<span class="hljs-title">func</span><span class="hljs-params">()</span></span>; <span class="hljs-comment">// overrides Base::func();</span>
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">func2</span><span class="hljs-params">(<span class="hljs-keyword">int</span>,<span class="hljs-keyword">double</span>,<span class="hljs-built_in">string</span>)</span></span>; <span class="hljs-comment">// overrides Base::func2</span>
+};
+</div></code></pre>
+<ul>
+<li><code>override</code> specifier lets the compiler check if the declaration overrides a virtual function is base class</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Base</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">int</span> <span class="hljs-title">func</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span></span>;
+};
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Derived</span>:</span> <span class="hljs-keyword">public</span> Base
+{
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">func</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span> <span class="hljs-keyword">override</span></span>; <span class="hljs-comment">// ok, override Base::func()</span>
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">func</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>; <span class="hljs-comment">// error, no such function in base class</span>
+}
+</div></code></pre>
+<ul>
+<li><code>final</code> specifier disables a function from being overrided in its derived classes</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Base</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">int</span> <span class="hljs-title">func</span><span class="hljs-params">()</span></span>;
+};
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Derived</span>:</span> <span class="hljs-keyword">public</span> Base
+{
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">func</span><span class="hljs-params">()</span> <span class="hljs-keyword">final</span></span>; <span class="hljs-comment">// cannot be overrided</span>
+}
+</div></code></pre>
+<ul>
+<li>If virtual functions base and derived classes have different default arguments. The defaults values used in a function call depend on to which class the pointer or reference points.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Base</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">func</span><span class="hljs-params">(<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>)</span></span>;
+};
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Derived</span>:</span> <span class="hljs-keyword">public</span> Base
+{
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">func</span><span class="hljs-params">(<span class="hljs-keyword">int</span> i = <span class="hljs-number">2</span>)</span></span>;
+};
+
+Derived dobj;
+Base *bptr = &amp;dobj;
+Derived *dptr = &amp;dobj;
+bptr-&gt;func(); <span class="hljs-comment">// call Derived::func(), but i = 0</span>
+dptr-&gt;func(); <span class="hljs-comment">// call Derived::func(), i = 2</span>
+</div></code></pre>
+So the function being called is always the function in derived class, but the default values depend on the type of pointer. See also the snippet <a href="./DefaultValues.cpp">DefaultValues</a>.
+<ul>
+<li>Circumventing the virtual mechanism: We can force a pointer to base to call the version in base class by explicitly calling the function with the name of the base class.</li>
+</ul>
+<pre><code class="language-c++"><div>Base *bptr = <span class="hljs-keyword">new</span> Derived();
+<span class="hljs-comment">// func() is virtual</span>
+bptr-&gt;Base::func(); <span class="hljs-comment">// explicitly call func() in base class</span>
+bptr-&gt;func(); <span class="hljs-comment">// call func() in derived class</span>
+</div></code></pre>
+</li>
+</ul>
+<h2 id="abstract-base-classes">Abstract base classes</h2>
+<p><strong>Abstract base classes</strong> are those that contain <strong>pure virtual functions</strong>. Pure virtual functions do not need to be defined, thus abstract base classes can not be instatiated.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ABase</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">func</span><span class="hljs-params">()</span> </span>=<span class="hljs-number">0</span>; <span class="hljs-comment">// pure virtual function</span>
+};
+</div></code></pre>
+<p>Classes that inherit abstract base class must implement all pure virtual functions before they can be instatiated. Otherwise, they are also abstract base classes.</p>
+<p><strong>Note</strong>: It is allowed to give a default definition of a pure base class outside of the class, but it does not change the fact that the class is a abstract one. In such case, derived class can use the default implementation by explicitly using the name of abstract base class. However, this feature is not widely used.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ABase</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">func</span><span class="hljs-params">()</span></span>=<span class="hljs-number">0</span>;
+}
+
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">ABase::func</span><span class="hljs-params">()</span>
+</span>{ <span class="hljs-comment">/* ... */</span> }
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Derived</span>:</span> <span class="hljs-keyword">public</span> ABase
+{
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">func</span><span class="hljs-params">()</span>
+        </span>{
+            ABase::func(); <span class="hljs-comment">// explicit use the default implementation</span>
+        }
+}
+ABase abobj; <span class="hljs-comment">// error, it is still abstract</span>
+Derived dobj; <span class="hljs-comment">// ok</span>
+</div></code></pre>
+<h2 id="access-control-and-inheritance">Access control and inheritance</h2>
+<ul>
+<li><code>protected</code> members
+<ul>
+<li>Inaccessible to users of the class</li>
+<li>Accessible to members and friends of classes derived from this class</li>
+</ul>
+</li>
+<li><code>public</code>, <code>private</code> and <code>protected</code> inheritance
+<ul>
+<li>Derivation access specifier controls the access that users of the derived classes.</li>
+<li><code>public</code> inheritance keeps <code>public</code> and <code>protected</code> members <code>public</code> and <code>protected</code> in derived class. (No change)</li>
+<li><code>protected</code> inheritance makes <code>public</code> and <code>protected</code> members <code>protected</code> in derived class.</li>
+<li><code>private</code> inheritance makes <code>public</code> and <code>protected</code> members <code>private</code> in derived class.</li>
+</ul>
+</li>
+<li>Accessibility of derived-to-base conversion
+<ul>
+<li>Remember that a pointer/reference to a base object can only access public members of base class, otherwise compilation fails.</li>
+<li><code>protected</code> and <code>private</code> inheritances make <code>public</code> members in base class no longer accessible in derived class. So, derived-to-base conversion is only useful for <code>public</code> inheritance.</li>
+<li><code>friend</code> functions of derived classes can always use derived-to-base conversions, no matter what inheritance. This is because <code>friend</code> functions have access to all members of a derived class and a derived-to-base conversion can only access <code>public</code> members of base class.</li>
+<li>Member functions and <code>friend</code> functions of a class derived (DD) from a derived class (D) can use derived-to-base conversion if D inherits from Base class (B) using either <code>public</code> or <code>protected</code>.</li>
+</ul>
+</li>
+<li>Friendship and inheritance
+<ul>
+<li>Friendship is <strong>NOT</strong> inherited: <code>friend</code> functions or classes of base class have no special access to members of derived classes.</li>
+</ul>
+</li>
+<li>Exempting individual members
+<ul>
+<li>It is allowed to inherit specific memebrs differently from derivation control</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Base</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">func</span><span class="hljs-params">()</span></span>;
+        <span class="hljs-comment">/* ... */</span>
+};
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Derived</span>:</span> <span class="hljs-keyword">private</span> Base
+{
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">using</span> <span class="hljs-title">Base::func</span><span class="hljs-params">()</span></span>;
+        <span class="hljs-comment">/* Other members are inherited as private,
+         * but func() is inherited as public
+         */</span>
+};
+</div></code></pre>
+</li>
+</ul>
+<h2 id="class-scope-under-inheritance">Class scope under inheritance</h2>
+<ul>
+<li>Name lookup happens at compile time: The static type determines what members can be used.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Base</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">func1</span><span class="hljs-params">()</span></span>;
+};
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Derived</span>:</span> <span class="hljs-keyword">public</span> Base
+{
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">func1</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">func2</span><span class="hljs-params">()</span></span>;
+};
+Derived obj;
+Derived *dptr = &amp;obj;
+Base *bptr = &amp;obj;
+obj.func1(); <span class="hljs-comment">// calls overriden version</span>
+obj.func2(); <span class="hljs-comment">// ok</span>
+dptr-&gt;func1(); <span class="hljs-comment">// calls overriden version</span>
+dptr-&gt;func2(); <span class="hljs-comment">// ok</span>
+bptr-&gt;func1(); <span class="hljs-comment">// ok, but calls overriden version</span>
+bptr-&gt;func2(); <span class="hljs-comment">// error, Base does not have func2()</span>
+</div></code></pre>
+<ul>
+<li>Name collision and inheritance: Derived classes can reuse names used in Base, but it hides the names used in Base. In such case, we can use base class name to explicitly use the members of base class being hidden.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Base</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-built_in">string</span> me = <span class="hljs-string">&quot;base&quot;</span>;
+};
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Derived</span>:</span> <span class="hljs-keyword">public</span> Base
+{
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-built_in">string</span> me = <span class="hljs-string">&quot;derived&quot;</span>; <span class="hljs-comment">// hides me in base;</span>
+        <span class="hljs-function"><span class="hljs-built_in">string</span> <span class="hljs-title">describe</span><span class="hljs-params">()</span> </span>{ <span class="hljs-keyword">return</span> me; } <span class="hljs-comment">// return &quot;derived&quot;</span>
+
+        <span class="hljs-function"><span class="hljs-built_in">string</span> <span class="hljs-title">describe2</span><span class="hljs-params">()</span> </span>{ <span class="hljs-keyword">return</span> Base::me; } <span class="hljs-comment">// return &quot;derived&quot;</span>
+};
+</div></code></pre>
+<p>Try the code <a href="./NameCollision.cpp">NameCollision</a></p>
+<ul>
+<li>Name lookup happens before type checking: Functions declared in an inner scope do not overload functions declared in an outer scope. Functions defined in a derived class do not overload members in base class. Instead, a member function in a derived class has the same name as a base-class member hides the base-class function.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Base</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">func</span><span class="hljs-params">()</span></span>;
+};
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Derived</span>:</span> <span class="hljs-keyword">public</span> Base
+{
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">func</span><span class="hljs-params">(<span class="hljs-keyword">int</span>)</span></span>; <span class="hljs-comment">// hides Base::func();</span>
+};
+</div></code></pre>
+<p>This is why derived classes must use the same name and same parameter list to override a virtual function in base class. The <code>override</code> specifier helps us check if we really override a virtual function as we want, instead of defining a new function.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Base</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">int</span> <span class="hljs-title">func</span><span class="hljs-params">()</span></span>;
+};
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">D1</span>:</span> <span class="hljs-keyword">public</span> Base
+{
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">func</span><span class="hljs-params">(<span class="hljs-keyword">int</span>)</span></span>; <span class="hljs-comment">// define a new function, and hides Base::func()</span>
+        <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">int</span> <span class="hljs-title">func2</span><span class="hljs-params">()</span></span>;
+};
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">D2</span>:</span> <span class="hljs-keyword">public</span> D1
+{
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">func</span><span class="hljs-params">()</span></span>; <span class="hljs-comment">// override Base::func()</span>
+        <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">func2</span><span class="hljs-params">()</span></span>; <span class="hljs-comment">// overried D1::func2()</span>
+};
+</div></code></pre>
+<h2 id="constructors-and-copy-control">Constructors and copy control</h2>
+<h3 id="virtual-destructors">Virtual destructors</h3>
+<p>A base class should have a <code>virtual</code> destructor. Otherwise, dynamically allocated spaces allocated in derived objevts may not be deleted.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Base</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        Base()=<span class="hljs-keyword">default</span>;
+        <span class="hljs-keyword">virtual</span> ~Base() = <span class="hljs-keyword">default</span>;
+};
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Derived</span>:</span> <span class="hljs-keyword">public</span> Base
+{
+    <span class="hljs-keyword">public</span>:
+        Derived() { ptr = <span class="hljs-keyword">new</span> <span class="hljs-keyword">int</span>[<span class="hljs-number">100</span>]; }
+        ~Derived() { <span class="hljs-keyword">delete</span>[] ptr; } <span class="hljs-comment">// override destructor</span>
+    <span class="hljs-keyword">private</span>:
+        <span class="hljs-keyword">int</span> *ptr;
+};
+
+Base *ptr = <span class="hljs-keyword">new</span> Derived();
+<span class="hljs-comment">/*
+ * If base-class destructor is not virtual,
+ * derived-class destructor will not be called.
+ * So Derived::ptr will not be freed -&gt; memory leakage.
+ */</span>
+<span class="hljs-keyword">delete</span> ptr;
+</div></code></pre>
+<p>Try <a href="./VirtualDestructor.cpp">VirtualDestructor</a></p>
+<p>Note: virtual destructors turn off synthesized move. Because, if any copy control is defined( copy or copy assignment or destructor), move and move assignment will not be automatically synthesized.</p>
+<h3 id="synthesized-copy-control-and-inheritance">Synthesized copy control and inheritance</h3>
+<ul>
+<li>If the default constructor, copy constructor, copy assignment operator or destructor is the base class is deleted or inaccessible, the corresponding member in the derived class is defined as delete.</li>
+<li>If the base class has an inaccessible or deleted destructor, the synthesized default and copy constructors in the derived classes are defined as deleted. Because, the base part cannot be deleted in a copy constructor of derived class.</li>
+<li>The compiler will not synthesize a deleted move operation. If we use <code>=default</code> to request for a move constructor, it will be marked as <code>delete</code> if base class destructor is deleted or corresponding move operation in base class is deleted or inaccessible. Because, the base-class of a derived-class object cannot be moved or destroyed.</li>
+</ul>
+<h3 id="derived-class-copy-control-members">Derived-class copy-control members</h3>
+<p>The copy and move constructor for a derived class must copy/move the members of its base part as well as the members in the members in the derived.</p>
+<ul>
+<li>Defining a derived copy or move constructor: We ordinarily use the corresponding base-class constructor initialize the base part of the object.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Base</span> {</span> <span class="hljs-comment">/* ... */</span> };
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Derived</span>:</span> <span class="hljs-keyword">public</span> Base
+{
+    <span class="hljs-keyword">public</span>:
+        Derived(): Base() {}
+};
+</div></code></pre>
+<ul>
+<li>Derived-class assignment operator: We explicitly call base class operator to assign base part in derived object.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Base</span> {</span>};
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Derived</span>:</span> <span class="hljs-keyword">public</span> Base
+{
+    <span class="hljs-keyword">public</span>:
+        Derived &amp;<span class="hljs-keyword">operator</span>=(<span class="hljs-keyword">const</span> Derived &amp;rhs)
+        {
+            Base::<span class="hljs-keyword">operator</span>=(rhs);
+            <span class="hljs-keyword">return</span> *<span class="hljs-keyword">this</span>;
+        }
+};
+</div></code></pre>
+<ul>
+<li>Destructor in derived class: Destructor in derived class only needs to clean up derived part in the object and does not need to explicitly call base-class operator.</li>
+<li>Calls to virtuals in constructor and destructor: When base-class constructor calls a virtual function, the derived-class part of the object is uninitialized. So, the base-class constructor/destructor will use the implementation in itself. See <a href="./CallVirtualsInBase.cpp">CallVirtualInBase</a>.</li>
+</ul>
+<h3 id="inherited-constructors">Inherited constructors</h3>
+<p>From C++ 11, a derived class is allowed to &quot;inherit&quot; constructors from base class. It asks the compiler to generate copy control for those that base class has. If derived class contains members that are not in base class, they are initialized by default values.</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Base</span> {</span> };
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Derived</span>:</span> <span class="hljs-keyword">public</span> Base
+{
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-keyword">using</span> Base::Base; <span class="hljs-comment">// inherit base-class constructors</span>
+        <span class="hljs-comment">/* Compiler automatically generates constructor similar to
+         * Derived(args) : Base(args) {};
+         */</span>
+};
+</div></code></pre>
+<ol>
+<li>Unlike <code>using</code> ordinary base-class functions, <code>using</code> base-class constructors does not change their access level.</li>
+<li><code>using</code> declarations can't specify <code>explicit</code> or <code>constexpr</code>. The compiler generated constructors remain the same if base-class specifies <code>explicit</code> or <code>constexpr</code>.</li>
+</ol>
+<h2 id="containers-and-inheritance">Containers and inheritance</h2>
+<p>We should not store objects in containers. Instead, we should put pointers/smart pointers, not objects, in containers.
+See <a href="./ContainerOfInherited.cpp">ContainerOfInherited</a></p>
+
+    </body>
+    </html>
