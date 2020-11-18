@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Templates and Generic Programming</title>
+        <style>
+</style>
+        
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item { list-style-type: none; } .task-list-item-checkbox { margin-left: -20px; vertical-align: middle; }
+</style>
+        
+        
+        
+    </head>
+    <body class="vscode-body vscode-light">
+        <ul>
+<li><a href="#templates-and-generic-programming">Templates and Generic Programming</a>
+<ul>
+<li><a href="#defining-a-template">Defining a template</a>
+<ul>
+<li><a href="#function-templates">Function templates</a></li>
+<li><a href="#class-templates">Class templates</a></li>
+<li><a href="#template-parameters">Template parameters</a></li>
+</ul>
+</li>
+<li><a href="#member-templates">Member templates</a>
+<ul>
+<li><a href="#controlling-instantiations">Controlling instantiations</a></li>
+</ul>
+</li>
+<li><a href="#template-argument-deduction">Template argument deduction</a>
+<ul>
+<li><a href="#conversions-and-template-type-parameters">Conversions and template type parameters</a></li>
+<li><a href="#function-template-explicit-arguments">Function-template explicit arguments</a></li>
+<li><a href="#trailing-return-types-and-type-transformation">Trailing return types and type transformation</a></li>
+<li><a href="#function-pointers-and-argument-deduction">Function pointers and argument deduction</a></li>
+<li><a href="#template-argument-deduction-and-references">Template argument deduction and references</a></li>
+<li><a href="#understanding-stdmove">Understanding <code>std::move</code></a></li>
+<li><a href="#forwarding">Forwarding</a></li>
+</ul>
+</li>
+<li><a href="#overloading-and-templates">Overloading and templates</a></li>
+<li><a href="#variadic-templates">Variadic templates</a>
+<ul>
+<li><a href="#writing-a-variadic-function-template">Writing a variadic function template</a></li>
+<li><a href="#pack-expansion">Pack expansion</a></li>
+<li><a href="#forwarding-parameter-packs">Forwarding parameter packs</a></li>
+</ul>
+</li>
+<li><a href="#template-specializations-%E6%A8%A1%E6%9D%BF%E7%89%B9%E5%8C%96">Template specializations 模板特化</a></li>
+</ul>
+</li>
+</ul>
+<h1 id="templates-and-generic-programming">Templates and Generic Programming</h1>
+<h2 id="defining-a-template">Defining a template</h2>
+<h3 id="function-templates">Function templates</h3>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;
+<span class="hljs-function">return_type <span class="hljs-title">function_name</span><span class="hljs-params">(parameter_list)</span>
+</span>{
+    <span class="hljs-comment">// function body</span>
+}
+
+<span class="hljs-comment">// as an example</span>
+<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">compare</span><span class="hljs-params">(<span class="hljs-keyword">const</span> T &amp;v1, <span class="hljs-keyword">const</span> T &amp;T2)</span>
+</span>{
+    <span class="hljs-keyword">if</span> ( v1 &lt; v2 ) <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;
+    <span class="hljs-keyword">if</span> ( v2 &lt; v1 ) <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}
+</div></code></pre>
+<ul>
+<li>Instatiating a function template<pre><code class="language-c++"><div>compare(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>);
+compare(obj1,obj2); <span class="hljs-comment">// obj1 &amp; obj2 must be objects of the same class</span>
+</div></code></pre>
+</li>
+</ul>
+<p>In this example, the arguments must have overloaded <code>&lt;</code> operator.</p>
+<p>When invoking a function template, we might not need to specify the type of arguments. Because the compiler can deduce its type <code>T</code>.</p>
+<ul>
+<li>Template type parameters
+We can provide multiple type parameters, each of them must starts from a <code>typename</code> or <code>class</code> keyword. The two words can be used interchangably in template programing.<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T1, <span class="hljs-keyword">typename</span> T2&gt;
+<span class="hljs-function">return_type <span class="hljs-title">func</span><span class="hljs-params">(<span class="hljs-comment">/* ... */</span>)</span></span>;
+<span class="hljs-comment">// equivalent to use class</span>
+<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T1, <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">T2</span>&gt;
+<span class="hljs-title">return_type</span> <span class="hljs-title">func</span>(/* ... */);</span>
+</div></code></pre>
+</li>
+<li>Nonetype template parameters
+In addition to defining type parameters, we can define templates that take nontype parameters. Usually, a nontype parameter represents a value.<pre><code class="language-c++"><div><span class="hljs-comment">// define a function to compare int arrays of N elements</span>
+<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">unsigned</span> N&gt;
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">compare</span><span class="hljs-params">(<span class="hljs-keyword">int</span> (&amp;a)[N], <span class="hljs-keyword">int</span> (&amp;b)[N])</span>
+</span>{}
+
+<span class="hljs-comment">// invoke</span>
+<span class="hljs-keyword">int</span> a[<span class="hljs-number">10</span>];
+<span class="hljs-keyword">int</span> b[<span class="hljs-number">10</span>];
+compare(a,b);
+</div></code></pre>
+</li>
+</ul>
+<p>Nonetype parameters can be mixed with type parameters in template definition.
+<code>c++     template &lt;typename T, unsigned N&gt; // this is allowed     ...     </code>
+See this ready-for-compilation code <a href="./NoneTypeTemplate.cpp">NoneTypeTemplate</a></p>
+<ul>
+<li><code>inline</code> or <code>constexpr</code>
+Template functions are allowed to be <code>inline</code> or <code>constexpr</code>.<pre><code class="language-c++"><div>tempalte &lt;<span class="hljs-keyword">typename</span> T, <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">C</span>, <span class="hljs-title">unsigned</span> <span class="hljs-title">N</span>&gt;
+<span class="hljs-title">inline</span> <span class="hljs-title">return_type</span> <span class="hljs-title">func_name</span>(<span class="hljs-title">parameter_list</span>);</span> <span class="hljs-comment">// ok</span>
+</div></code></pre>
+</li>
+<li>Reduce requirement for input type
+The <code>compare</code> examples above implicit assume that the type <code>T</code> overloads operator <code>&lt;</code>. But we can lift this assumption by using <code>less</code> function in standard library.<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">compare</span><span class="hljs-params">(<span class="hljs-keyword">const</span> T &amp;t1, <span class="hljs-keyword">const</span> T &amp;t2)</span>
+</span>{
+    <span class="hljs-keyword">if</span> ( less&lt;T&gt;()(t1,t2) ) <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;
+    <span class="hljs-keyword">if</span> ( less&lt;T&gt;()(t2,t1) ) <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}
+</div></code></pre>
+</li>
+</ul>
+<p><strong>Template programs should try to minimize the number of requirements placed on the argument types.</strong></p>
+<ul>
+<li>Template compilation
+When the compiler sees the definition of a template, it does not generate code. It generates code only wehn we instantiate a specific instance of the template.</li>
+</ul>
+<p>Definitions of function templates and member functions of class templates are ordinarily put into header files.</p>
+<ul>
+<li>Compilation errors
+Compilation erroes are mostly reported during instantiation.</li>
+</ul>
+<h3 id="class-templates">Class templates</h3>
+<ul>
+<li>Defining a class templates<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Base</span>
+{</span>};
+</div></code></pre>
+</li>
+<li>Instantiating a class template
+When we use a class template, we must supply extra information: a list of explicit template arguments.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-built_in">vector</span>&lt;<span class="hljs-keyword">int</span>&gt; vec;
+</div></code></pre>
+<ul>
+<li>References to a template type in the scope of the template</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function">T &amp;<span class="hljs-title">func</span><span class="hljs-params">()</span></span>;
+        <span class="hljs-built_in">vector</span>&lt;T&gt; vec;
+};
+</div></code></pre>
+<ul>
+<li>Simplifying use of a template class name</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>
+{</span>
+    <span class="hljs-comment">// inside the template class</span>
+    <span class="hljs-function">Foo&amp; <span class="hljs-title">func</span><span class="hljs-params">()</span></span>; <span class="hljs-comment">// no need to write Foo&lt;T&gt;</span>
+};
+
+<span class="hljs-comment">// outside of the template</span>
+<span class="hljs-function">Foo&lt;<span class="hljs-keyword">int</span>&gt; <span class="hljs-title">doSomthing</span><span class="hljs-params">()</span></span>;
+</div></code></pre>
+<ul>
+<li>Class templates and friends
+Friendship is one-on-one.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span>&gt; <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">FFoo</span>;</span> <span class="hljs-comment">// forward declaration</span>
+<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>
+{</span>
+    <span class="hljs-keyword">friend</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">FFoo</span>&lt;T&gt;;</span>
+};
+</div></code></pre>
+<p><code>FFoo&lt;int&gt;</code> is only a friend to <code>Foo&lt;int&gt;</code>.</p>
+<ul>
+<li>Befriending the template's own type parameter</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> Type&gt;
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>
+{</span>
+    <span class="hljs-keyword">friend</span> Type; <span class="hljs-comment">// grants access to the type used to instantiate Foo</span>
+};
+</div></code></pre>
+<p>This is useful when instantiate the template with a class.</p>
+<ul>
+<li>Template type alias</li>
+</ul>
+<pre><code class="language-c++"><div>typdef Foo&lt;<span class="hljs-built_in">string</span>&gt; strFoo;
+</div></code></pre>
+<ul>
+<li><code>static</code> members of class template
+Each instanitation of a template class has its own copy of the <code>static</code> members.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-keyword">static</span> <span class="hljs-keyword">int</span> count;
+};
+</div></code></pre>
+<p><code>Foo&lt;int&gt;</code> and <code>Foo&lt;string&gt;</code> have different copies of <code>count</code>.</p>
+<h3 id="template-parameters">Template parameters</h3>
+<ul>
+<li>The names used for template parameters are not important.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt; <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>{</span>};
+<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> U&gt; <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>{</span>}; <span class="hljs-comment">// completely equivalent</span>
+</div></code></pre>
+<ul>
+<li>Template parameters and scope</li>
+<li>A template parameter hides any declaration out that name in an outer scope.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">double</span> A;
+<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> A, <span class="hljs-keyword">typename</span> B&gt;
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">f</span><span class="hljs-params">(A a, B b)</span>
+</span>{
+    A tmp = a; <span class="hljs-comment">// A hides the A in outer scope</span>
+}
+</div></code></pre>
+<ul>
+<li>Template declaration
+Forward declaration,</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt; <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">compare</span><span class="hljs-params">(<span class="hljs-keyword">const</span> T&amp;, <span class="hljs-keyword">const</span> T&amp;)</span></span>;
+<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span>&gt; <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>;</span> <span class="hljs-comment">// T can be negelected in forward declaration</span>
+</div></code></pre>
+<ul>
+<li>Using class members that are types
+If we write something like <code>T::size_type</code>, the compiler does not know if <code>T::size_type</code> is a value or a type. Thus, we nhave to tell the compiler when we use a class member that is a type.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-built_in">vector</span>&lt;T&gt; vec;
+        <span class="hljs-comment">// We must tell compiler vector&lt;T&gt;::size_type is a type, not a varaible</span>
+        <span class="hljs-keyword">typename</span> <span class="hljs-built_in">vector</span>&lt;T&gt;::size_type count;
+};
+</div></code></pre>
+<ul>
+<li>Default template arguments</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-comment">// default arguments for template functions</span>
+<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T, <span class="hljs-keyword">typename</span> F = less&lt;T&gt;&gt;
+<span class="hljs-keyword">int</span> compare(<span class="hljs-keyword">const</span> T &amp;v1, <span class="hljs-keyword">const</span> T &amp;v2, F f = F() )
+{
+    <span class="hljs-comment">// ... </span>
+}
+
+<span class="hljs-comment">// default arguments for template class</span>
+<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T = <span class="hljs-keyword">int</span>&gt;
+class Foo
+{};
+Foo fint;
+Foo&lt;<span class="hljs-built_in">string</span>&gt; fstring;
+</div></code></pre>
+<h2 id="member-templates">Member templates</h2>
+<p>A class, either an ordinary or template class, may have a member function that is itself a template.</p>
+<ul>
+<li>Member templates of ordinary class</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> T&gt;
+        <span class="hljs-keyword">void</span> <span class="hljs-title">func</span><span class="hljs-params">(T t)</span></span>;
+};
+</div></code></pre>
+<ul>
+<li>Member templates of class templates</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt; 
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+    <span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> It&gt;
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">Func</span><span class="hljs-params">(It a, It b)</span></span>; <span class="hljs-comment">// template member function;</span>
+    <span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> It&gt;
+    Foo(It a, It b); <span class="hljs-comment">// template constructor</span>
+};
+
+<span class="hljs-comment">// define functions outside of the template</span>
+<span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> T&gt;
+    <span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> It&gt;
+    Foo&lt;T&gt;::Foo(It a, It b) { <span class="hljs-comment">/* */</span> }
+<span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> T&gt;
+    <span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> It&gt;
+    <span class="hljs-keyword">void</span> Foo&lt;T&gt;::Func(It a, It b) { <span class="hljs-comment">/* */</span> }
+</div></code></pre>
+<h3 id="controlling-instantiations">Controlling instantiations</h3>
+<p>The fact that instantiations are generated when a template is used means that the same instantiation may appear in multiple object files. This makes the total size of the objects very large.</p>
+<p>We can use an explicit instantiation,</p>
+<pre><code class="language-c++"><div><span class="hljs-keyword">extern</span> <span class="hljs-keyword">template</span> declaration; <span class="hljs-comment">// declaration</span>
+<span class="hljs-keyword">template</span> declaration; <span class="hljs-comment">// definition</span>
+</div></code></pre>
+<p>When the compiler sees an <code>extern</code> template declaration, it will not generate code for that instantiation in that file. There can be multiple <code>extern</code> declaration in the same project, but there should be only one definition of the template.</p>
+<h2 id="template-argument-deduction">Template argument deduction</h2>
+<p>The process of determining the template arguments from the function arguments is known as <strong>template argument deduction</strong>.</p>
+<h3 id="conversions-and-template-type-parameters">Conversions and template type parameters</h3>
+<p>Top-level consts in either the parameter or the argument are ignored. The only other conversions performed in a call to a function template are</p>
+<ol>
+<li><code>const</code> conversion: A function parameter that is a reference/pointer to a <code>const</code> can be passed a reference/pointer to a non<code>const</code> object</li>
+<li>Array- or function-to-pointer conversions: If the function parameter is not a reference type, then the normal pointer conversion will be applied to arguments of array or function type. An array argument will be converted to a pointer to its fisrt element. Similarly, a function argument will be converted to a pointer to the function's type.</li>
+</ol>
+<p>Other conversion, such as arithmetic conversions, derived-to-base and user-defined conversion, are no performed.</p>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt; <span class="hljs-function">T <span class="hljs-title">fobj</span><span class="hljs-params">(T,T)</span></span>;
+<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt; <span class="hljs-function">T <span class="hljs-title">fref</span><span class="hljs-params">(<span class="hljs-keyword">const</span> T&amp;, <span class="hljs-keyword">const</span> T&amp;)</span></span>;
+<span class="hljs-function"><span class="hljs-built_in">string</span> <span class="hljs-title">s1</span><span class="hljs-params">(<span class="hljs-string">&quot;a string&quot;</span>)</span></span>;
+<span class="hljs-function"><span class="hljs-keyword">const</span> <span class="hljs-built_in">string</span> <span class="hljs-title">s2</span><span class="hljs-params">(<span class="hljs-string">&quot;another string&quot;</span>)</span></span>;
+fobj(s1,s2); <span class="hljs-comment">// ok, copy by value, const is ignored</span>
+fref(s1,s2); <span class="hljs-comment">// ok, both convert to const string&amp;</span>
+<span class="hljs-keyword">int</span> a[<span class="hljs-number">10</span>], b[<span class="hljs-number">2</span>];
+fobj(a,b); <span class="hljs-comment">// ok, arrays converted to pointer to first element, fobj(int*,int*)</span>
+fref(a,b); <span class="hljs-comment">// error, conversion not allowed</span>
+</div></code></pre>
+<ul>
+<li>Function parameters that use the same template parameter type</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">compare</span><span class="hljs-params">(<span class="hljs-keyword">const</span> T &amp;a, <span class="hljs-keyword">const</span> T &amp;b)</span>
+</span>{ <span class="hljs-comment">/* ... */</span> }
+<span class="hljs-keyword">long</span> lng;
+compare(lng,<span class="hljs-number">1024</span>); <span class="hljs-comment">// error, 1024 is int, arithmetric conversion is not allowed</span>
+compare(lng,<span class="hljs-number">2014L</span>); <span class="hljs-comment">// ok, both are long</span>
+</div></code></pre>
+<p>Checkout <a href="./TypeConversion.cpp">TypeConversion</a> for details.</p>
+<h3 id="function-template-explicit-arguments">Function-template explicit arguments</h3>
+<p>We can explicitly specify the type when calling a template funciton,</p>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T1, <span class="hljs-keyword">typename</span> T2, <span class="hljs-keyword">typename</span> T3&gt;
+<span class="hljs-function">T1 <span class="hljs-title">sum</span><span class="hljs-params">(T2, T3)</span></span>;
+
+sum&lt;<span class="hljs-keyword">int</span>&gt;(<span class="hljs-number">1</span>,<span class="hljs-number">2</span>);         <span class="hljs-comment">// deduce T2, T3</span>
+sum&lt;<span class="hljs-keyword">int</span>,<span class="hljs-keyword">int</span>&gt;(<span class="hljs-number">1</span>,<span class="hljs-number">2</span>);     <span class="hljs-comment">// deduce T3</span>
+sum&lt;<span class="hljs-keyword">int</span>,<span class="hljs-keyword">int</span>,<span class="hljs-keyword">int</span>&gt;(<span class="hljs-number">1</span>,<span class="hljs-number">2</span>); <span class="hljs-comment">// no deduction needed</span>
+</div></code></pre>
+<p>Normal conversions apply for explicitly specified arguments,</p>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">compare</span><span class="hljs-params">(<span class="hljs-keyword">const</span> T&amp;, <span class="hljs-keyword">const</span> T&amp;)</span>
+</span>{ <span class="hljs-comment">/* ... */</span> }
+
+<span class="hljs-keyword">long</span> lng;
+compare(lng,<span class="hljs-number">1024</span>); <span class="hljs-comment">// error, arguments have different types</span>
+compare(lng,<span class="hljs-number">1024L</span>); <span class="hljs-comment">// ok, two arguments have the same type</span>
+compare&lt;<span class="hljs-keyword">int</span>&gt;(lng,<span class="hljs-number">20</span>); <span class="hljs-comment">// ok, normal conversion applies</span>
+compare&lt;<span class="hljs-keyword">long</span>&gt;(lng,<span class="hljs-number">20</span>); <span class="hljs-comment">// ok, normal conversion applies</span>
+</div></code></pre>
+<h3 id="trailing-return-types-and-type-transformation">Trailing return types and type transformation</h3>
+<p>Compiler can automatically deduce return types of template functions,</p>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;Typename It&gt;
+??? &amp;fcn(It beg, It end)
+{
+    <span class="hljs-keyword">return</span> *beg;
+}
+<span class="hljs-keyword">auto</span> &amp;i = fcn(vec.begin(),vec.end()); <span class="hljs-comment">// automatically deduce return type</span>
+</div></code></pre>
+<p>another example written with trailing return type,</p>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> It&gt;
+<span class="hljs-function"><span class="hljs-keyword">auto</span> <span class="hljs-title">fcn</span><span class="hljs-params">(It beg, It end)</span> -&gt; <span class="hljs-title">decltype</span><span class="hljs-params">(*beg)</span>
+</span>{
+    <span class="hljs-keyword">return</span> *beg;
+}
+</div></code></pre>
+<ul>
+<li>Type transformation library template classes
+In template programming, sometimes we want to know the type of an element passed by users, rather than references.</li>
+</ul>
+<p>To obtain the element type, we can use a library <strong>type transformation</strong> template.</p>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> It&gt;
+<span class="hljs-function"><span class="hljs-keyword">auto</span> <span class="hljs-title">fcn</span><span class="hljs-params">(It beg, It end)</span> -&gt;
+    <span class="hljs-keyword">typename</span> remove_reference&lt;<span class="hljs-title">decltype</span><span class="hljs-params">(*beg)</span>&gt;::type
+</span>{
+    <span class="hljs-comment">// return by value, not reference</span>
+    <span class="hljs-keyword">return</span> *beg;
+}
+</div></code></pre>
+<p>Type transformation templates, like <code>remove_reference</code> used in the example above, are defined in <code>type_traits</code> header. Type traits (类型萃取)</p>
+<h3 id="function-pointers-and-argument-deduction">Function pointers and argument deduction</h3>
+<p>When we initialize or assign a function pointer from a function template, them compiler uses the type of the pointer to deduce the template arguments.</p>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">compare</span><span class="hljs-params">(<span class="hljs-keyword">const</span> T&amp;, <span class="hljs-keyword">const</span> T&amp;)</span>
+</span>{ <span class="hljs-comment">/* ... */</span> }
+<span class="hljs-comment">// pf1 points to the instantiation int compare(const int&amp;, const int&amp;)</span>
+<span class="hljs-keyword">int</span> (*pf1)(<span class="hljs-keyword">const</span> <span class="hljs-keyword">int</span>&amp;, <span class="hljs-keyword">const</span> <span class="hljs-keyword">int</span>&amp;) = compare;
+</div></code></pre>
+<p>We can also passing template function instantiationgs as arguments to other functions,</p>
+<pre><code class="language-c++"><div><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">func</span><span class="hljs-params">(<span class="hljs-keyword">int</span> (*)(<span class="hljs-keyword">const</span> <span class="hljs-keyword">int</span>&amp;, <span class="hljs-keyword">const</span> <span class="hljs-keyword">int</span>&amp;))</span></span>;
+func(compare); <span class="hljs-comment">// error, compiler does not know which instantiation of compare</span>
+func(compare&lt;<span class="hljs-keyword">int</span>&gt;); <span class="hljs-comment">// ok</span>
+</div></code></pre>
+<h3 id="template-argument-deduction-and-references">Template argument deduction and references</h3>
+<ul>
+<li>Type deduction from Lvalue reference function parameters
+When a function parameter is an ordinary reference to a template type parameter <code>T&amp;</code>, the binding rules say that we can pass only an lvalue.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">f1</span><span class="hljs-params">(T&amp;)</span></span>;
+f1(i); <span class="hljs-comment">// i is int, T is int</span>
+f1(ci); <span class="hljs-comment">// ci is a const int, T is const int</span>
+f1(<span class="hljs-number">5</span>); <span class="hljs-comment">// error, 5 is rvalue</span>
+</div></code></pre>
+<p>If a function template has type <code>const T&amp;</code>, normal binding rules say that we can pass any kind of arugment.</p>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">f2</span><span class="hljs-params">(<span class="hljs-keyword">const</span> T&amp;)</span></span>;
+f2(i); <span class="hljs-comment">// i is int, T is int</span>
+f2(ci); <span class="hljs-comment">// ci is const int, I is int</span>
+f2(<span class="hljs-number">5</span>); <span class="hljs-comment">// a const int&amp; can be bound to an rvalue, T is int</span>
+</div></code></pre>
+<ul>
+<li>Type deduction from Rvalue reference function parameters
+When a function parameter is an rvalue reference, normal binding rules say that we can pass an rvalue to this parameter.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt; <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">f3</span><span class="hljs-params">(T&amp;&amp;)</span></span>;
+f3(<span class="hljs-number">42</span>); <span class="hljs-comment">// 42, as a literal, is a rvalue; T is int</span>
+</div></code></pre>
+<ul>
+<li>Reference collapsing and rvalue reference parameters
+Normally, we cannot pass lvalues to an rvalue parameter in a function. But, the language defines two exceptions to normal binding rules that allow this kind of usage in template functions.</li>
+</ul>
+<ol>
+<li>When we pass an lvalue ( e.g. i ) to a function parameter that is an rvalue reference to a template type parameter ( e.g. <code>T&amp;&amp;&amp;</code> ), the compiler deduce the template type parameter as the argument's lvalue reference type.</li>
+<li>If we indirectly create a reference to a reference, then those references collapse. In all but one case, the references collapse to form an ordinary lvalue reference type. The only exception is, passing an rvalue reference to an rvalue reference collapses to an rvalue reference.</li>
+</ol>
+<pre><code class="language-c++"><div>(X&amp; ) &amp;  <span class="hljs-comment">// collapse to X&amp;</span>
+(X&amp; ) &amp;&amp; <span class="hljs-comment">// collapse to X&amp;</span>
+(X&amp;&amp;) &amp;  <span class="hljs-comment">// collapse to X&amp;</span>
+(X&amp;&amp;) &amp;&amp; <span class="hljs-comment">// collapse to X&amp;&amp;</span>
+</div></code></pre>
+<p>Examples:</p>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt; <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">f3</span><span class="hljs-params">(T&amp;&amp;)</span></span>;
+
+<span class="hljs-keyword">int</span> i;
+<span class="hljs-keyword">int</span> &amp;ci = i;
+<span class="hljs-keyword">int</span> &amp;&amp;ri = <span class="hljs-built_in">std</span>::make(ci);
+f3(i);  <span class="hljs-comment">// T -&gt; int&amp;</span>
+f3(ci); <span class="hljs-comment">// T -&gt; int&amp;</span>
+f3(ri); <span class="hljs-comment">// T -&gt; int&amp;&amp;</span>
+</div></code></pre>
+<p>There are two important consequences from these rules:</p>
+<ol>
+<li>A function parameter that is an rvalue reference to a template type parameter (e.g. <code>T&amp;&amp;</code>) can be bound to an lvalue.</li>
+<li>If the argument is an lvalue, then tbe deduced template argument type will be an lvalue reference type and the function parameter will be instantiated as an ordinary lvalue reference parameter (<code>T&amp;</code>).</li>
+</ol>
+<p>This means, we can pass any type of argument to a <code>T&amp;&amp;</code> function parameter.</p>
+<p>We can overload function templates as before,</p>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt; <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">f</span><span class="hljs-params">(T&amp;&amp;)</span></span>;
+<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt; <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">f</span><span class="hljs-params">(<span class="hljs-keyword">const</span> T&amp;)</span></span>;
+</div></code></pre>
+<h3 id="understanding-stdmove">Understanding <code>std::move</code></h3>
+<ul>
+<li>How <code>std::move</code> is defined</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;
+<span class="hljs-keyword">typename</span> remove_reference&lt;T&gt;::<span class="hljs-function">type &amp;&amp;<span class="hljs-title">move</span><span class="hljs-params">(T &amp;&amp;t)</span>
+</span>{
+    <span class="hljs-comment">// remove reference to get the element type</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">static_cast</span>&lt;<span class="hljs-keyword">typename</span> remove_reference&lt;T&gt;::type &amp;&amp;&gt;(t);
+}
+</div></code></pre>
+<ul>
+<li><code>static_cast</code> from an Lvalue to an Rvalue is permitted</li>
+</ul>
+<h3 id="forwarding">Forwarding</h3>
+<p><strong>I am confused about forwarding</strong></p>
+<p>A function parameter that is an rvalue reference to a template type parameter (i.e., <code>T&amp;&amp;</code>) preserves the <code>const</code>ness and lvalue/rvalue property of its corresponding argument.</p>
+<ul>
+<li>Using <code>std::forward</code> to preserve type information in a call
+<code>forward</code> returns an rvalue reference to that explicit argument type. That is, the return type of <code>forward&lt;T&gt;</code> is <code>T&amp;&amp;</code>.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> Type&gt;
+intermediary(Type &amp;&amp;arg)
+{
+    finalFunc(<span class="hljs-built_in">std</span>::Forward&lt;Type&gt;(arg));
+}
+</div></code></pre>
+<h2 id="overloading-and-templates">Overloading and templates</h2>
+<p>If there are more than one functions that are equally matched, then</p>
+<ul>
+<li>If there is only one nontemplate function in the set of equally good matches, the nontemplate function is called.</li>
+<li>If there are no nontemplate functions in the set, but there are multiple function templates, and one the these templates is more specialized than any of the others, the more specialized function template is called.</li>
+</ul>
+<h2 id="variadic-templates">Variadic templates</h2>
+<p>A <strong>variadic template</strong> is a template function or class that can take a varying number of parameters. The varying parameters are known as a <strong>parameter pack</strong>. There are two kinds of parameter packs: A <strong>template parameter pack</strong> represents zero or more template parameters and a <strong>function parameter pack</strong> represents zero or more funciton parameters.</p>
+<pre><code class="language-c++"><div><span class="hljs-comment">// A function template that takes at least one argument</span>
+<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T, <span class="hljs-keyword">typename</span>... Args&gt;
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">foo</span><span class="hljs-params">(<span class="hljs-keyword">const</span> T&amp; t, <span class="hljs-keyword">const</span> Args&amp;... rest)</span></span>;
+</div></code></pre>
+<ul>
+<li>The <code>sizeof...</code> operator
+<code>sizeof...</code> operator returns the number of elements in a pack.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> ...Args&gt;
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">f</span><span class="hljs-params">(Args ... args)</span>
+</span>{
+    <span class="hljs-keyword">sizeof</span>...(Args); <span class="hljs-comment">// number of type parameters</span>
+    <span class="hljs-keyword">sizeof</span>...(args); <span class="hljs-comment">// number of function parameters</span>
+}
+</div></code></pre>
+<h3 id="writing-a-variadic-function-template">Writing a variadic function template</h3>
+<p>Unlike <code>initializer_list</code>, variadic functions can take arguments of different types. Variadic functions are often recursive. For example,</p>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;
+<span class="hljs-function">ostream &amp;<span class="hljs-title">print</span><span class="hljs-params">(ostream &amp;os, <span class="hljs-keyword">const</span> T &amp;t)</span></span>;
+
+<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T, <span class="hljs-keyword">typename</span> ... Args&gt;
+<span class="hljs-function">ostream &amp;<span class="hljs-title">print</span><span class="hljs-params">(ostream &amp;os, <span class="hljs-keyword">const</span> T &amp;t, <span class="hljs-keyword">const</span> Args ... rest)</span>
+</span>{
+    os &lt;&lt; t &lt;&lt; <span class="hljs-string">&quot; &quot;</span>;
+    <span class="hljs-keyword">return</span> print(os,rest...); <span class="hljs-comment">// recusive, until rest has only one element</span>
+}
+</div></code></pre>
+<h3 id="pack-expansion">Pack expansion</h3>
+<p>The second definition of <code>print</code> function above recursively expands argument list.</p>
+<p>It is also allowed to apply a function on each of the element in the pack. For example,</p>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span>... Args&gt;
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">doSomthing</span><span class="hljs-params">(Args... rest)</span>
+</span>{
+    <span class="hljs-comment">// func is a single-argument function</span>
+    <span class="hljs-comment">// print is a variadic function template</span>
+    <span class="hljs-comment">// func applies on every elemenr in the pack</span>
+    print(os,func(rest)...);
+}
+</div></code></pre>
+<h3 id="forwarding-parameter-packs">Forwarding parameter packs</h3>
+<p>The library function <code>std::forward</code> can be applied to every element in a parameter pack. For example, if we want to implement the <code>emplace_back</code> function in <code>vector</code>, this might be the code</p>
+<pre><code class="language-c++"><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">myVector</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-keyword">template</span> &lt;class... Args&gt;
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">emplace_back</span><span class="hljs-params">(Args&amp;&amp;...)</span></span>;
+};
+
+<span class="hljs-keyword">template</span> &lt;class... Args&gt;
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">myVector::emplace_back</span><span class="hljs-params">(Args&amp;&amp;... rest)</span>
+</span>{
+    alloc.constructor(address,<span class="hljs-built_in">std</span>::forward&lt;Args&gt;(rest)...);
+    <span class="hljs-comment">// By the way alloc.constructor must also be variadic, otherwise it will not be able to take a pack as argument.</span>
+}
+</div></code></pre>
+<h2 id="template-specializations-模板特化">Template specializations 模板特化</h2>
+<p>We can defined a special implementation for a specific type parameter for a template, and this process is known as template specialization.</p>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">compare</span><span class="hljs-params">(<span class="hljs-keyword">const</span> T&amp;, <span class="hljs-keyword">const</span> T&amp;)</span></span>;
+
+<span class="hljs-comment">// special version of compare to handle pointers to character arrays</span>
+<span class="hljs-keyword">template</span> &lt;&gt;
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">compare</span><span class="hljs-params">(<span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span>* <span class="hljs-keyword">const</span> &amp;p1, <span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span>* <span class="hljs-keyword">const</span> &amp;p2)</span>
+</span>{
+    <span class="hljs-keyword">return</span> <span class="hljs-built_in">strcmp</span>(p1,p2);
+}
+</div></code></pre>
+<ul>
+<li>Function overloading versus template specialization
+Specializations instantiate a template; they do not overload it. As a result, specializations do not affect function matching.</li>
+<li>Class template specializations</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">func</span><span class="hljs-params">(T)</span></span>;
+};
+
+<span class="hljs-comment">// specialization for T = int</span>
+<span class="hljs-keyword">template</span> &lt;&gt;
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>&lt;int&gt;
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">func</span><span class="hljs-params">(<span class="hljs-keyword">int</span>)</span></span>;
+};
+</div></code></pre>
+<ul>
+<li>Class-template partial specializations
+We can specify some, but not all, of the template parameters or some, but not all, aspects of the parameters. A class template partial specialization is itself a template.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">T</span>&gt;
+<span class="hljs-title">class</span> <span class="hljs-title">Foo</span>
+{</span>};
+
+<span class="hljs-comment">// partial specialization</span>
+<span class="hljs-keyword">template</span> &lt;<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">T</span>&gt;
+<span class="hljs-title">class</span> <span class="hljs-title">Foo</span>&lt;T&amp;&amp;&gt; {</span>}; <span class="hljs-comment">// rvalue references</span>
+<span class="hljs-keyword">template</span> &lt;<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">T</span>&gt;
+<span class="hljs-title">class</span> <span class="hljs-title">Foo</span>&lt;I&amp;&gt; {</span>};  <span class="hljs-comment">// lvalue references</span>
+</div></code></pre>
+<ul>
+<li>Specializing members but not the class
+We can specialize a member function for a specific type parameter, while keeping other members unchanged.</li>
+</ul>
+<pre><code class="language-c++"><div><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>
+{</span>
+    <span class="hljs-keyword">public</span>:
+        <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">func</span><span class="hljs-params">()</span></span>;
+};
+
+<span class="hljs-comment">// specialize a member function when T = in</span>
+<span class="hljs-keyword">template</span> &lt;&gt;
+<span class="hljs-keyword">void</span> Foo&lt;<span class="hljs-keyword">int</span>&gt;::func()
+{ <span class="hljs-comment">/* ... */</span>}
+</div></code></pre>
+
+    </body>
+    </html>
