@@ -19,6 +19,9 @@ Todo list
 - [ ] Chapter 14: Overloaded operators
 - [x] Chapter 15: Object-oriented programming
 - [x] Chapter 16: Templates and generic programming
+
+Advanced topics: I only finished reading some parts in the following chapters. I have to go back to those topics when I have more experience.
+
 - [ ] Chapter 17: Specialized library facilities
 - [ ] Chapter 18: Tools for large programs
 - [ ] Chapter 19: Specialized tools and techniques
